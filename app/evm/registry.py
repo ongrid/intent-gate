@@ -107,8 +107,8 @@ class ChainRegistry:
                     chain.ws_rpc_url = ws_rpc_url
                     break
             else:
-                raise ValueError(
-                    f"Chain {chain.name} ({chain.id}) does not have a valid RPC URL set"
+                log.warning(
+                    "Chain %s (%s) does not have a valid RPC URL set", chain.name, chain.id
                 )
 
     def get_chain_by_id(self, chain_id: int) -> Optional[Chain]:

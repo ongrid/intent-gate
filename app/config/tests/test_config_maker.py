@@ -24,7 +24,6 @@ def test_maker_config_from_env_success():
         config.signer_priv_key
         == "deadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef"
     )
-    assert config.maker_ws_url == "wss://api.liquorice.tech/v1/maker/ws"
 
 
 def test_maker_config_missing_maker_id():

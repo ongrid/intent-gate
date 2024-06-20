@@ -125,13 +125,6 @@ def test_from_env_invalid_ws_urls(registry_from_inventory: ChainRegistry):
             registry_from_inventory.from_env()
 
 
-def test_from_env_missing_url(registry_from_inventory: ChainRegistry):
-    """Test error when no WebSocket URL is set."""
-    with patch.dict(os.environ, clear=True):
-        with pytest.raises(ValueError, match="does not have a valid RPC URL set"):
-            registry_from_inventory.from_env()
-
-
 def test_from_env_empty_registry():
     """Test error when calling from_env on empty registry."""
     registry = ChainRegistry()

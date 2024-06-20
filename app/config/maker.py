@@ -21,14 +21,11 @@ class MakerConfig:
         maker (str): Maker session ID for authentication
         authorization (str): UUID authorization token for maker session
         signer_priv_key (str): Hex Private key for signing quotes
-        maker_ws_url (str): WebSocket URL for maker service connection
-        settlement_address (str): Ethereum address of the settlement contract
     """
 
     maker: str
     authorization: str
     signer_priv_key: str
-    maker_ws_url: str = "wss://api.liquorice.tech/v1/maker/ws"
 
     @classmethod
     def from_env(cls) -> "MakerConfig":
