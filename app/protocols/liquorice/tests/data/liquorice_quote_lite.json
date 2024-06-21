@@ -1,0 +1,21 @@
+{
+    "messageType": "rfqQuote",
+    "message": {
+        "rfqId": "2aca5f16-defd-4f0c-9d4e-f219d69cbd7b",
+        "levels": [
+            {
+                "expiry": 1746972086,
+                "settlementContract": "0xAcA684A3F64e0eae4812B734E3f8f205D3EEd167",
+                "recipient": "0xB073C430FbDd0f56D6BfDdcb7e40C17CC611Fc04",
+                "signer": "0xB073C430FbDd0f56D6BfDdcb7e40C17CC611Fc04",
+                "baseToken": "0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9",
+                "quoteToken": "0xaf88d065e77c8cC2239327C5EDb3A432268e5831",
+                "baseTokenAmount": "1249771130",
+                "quoteTokenAmount": "135542446",
+                "minQuoteTokenAmount": "1",
+                "signature": "0xa235ba3136acb14c5968f119af99983b0af5ea42349ec4f891c4f48ed97c3c6b43ef48ec75875c5400461bdaea02619e6db8e2b2c0daf5f15b5280c0d4067c571b",
+                "type": "lite"
+            }
+        ]
+    }
+}

@@ -1,13 +1,19 @@
 import json
 from copy import deepcopy
+from pathlib import Path
 from typing import Any, Dict
 from uuid import UUID
 
 import pytest
+from hexbytes import HexBytes
+from web3 import Web3
 
 from app.protocols.liquorice.schemas import (
     IntentMetadata,
+    IntentMetadataContent,
+    LiquoriceEnvelope,
     RFQEnvelope,
+    RFQMessage,
 )
 
 VALID_RFQ_EXAMPLE_DICT: Dict[str, Any] = {
@@ -31,6 +37,10 @@ VALID_RFQ_EXAMPLE_DICT: Dict[str, Any] = {
 }
 MAX_UINT256_STR = "115792089237316195423570985008687907853269984665640564039457584007913129639935"
 MAX_UINT256_INT = 2**256 - 1
+
+valid_quote_envelope_text = (
+    Path(__file__).parent / "data" / "liquorice_quote_lite.json"
+).read_text()
 
 
 def test_parse_valid_rfq():
@@ -143,3 +153,26 @@ def test_parse_rfq_raise_when_expiry_wrong():
     rfq_wrong_expiry["message"]["expiry"] = "2000000000"  # string instead of int
     with pytest.raises(ValueError, match="Expiry must be a positive integer"):
         RFQEnvelope.model_validate_json(json.dumps(rfq_wrong_expiry))
+
+
+def test_envelope_init_dto_infer_rfq_type():
+    intent_meta = IntentMetadata(
+        source="cow_protocol", content=IntentMetadataContent(auctionId=3824359)
+    )
+    rfq_msg = RFQMessage(
+        chainId=42161,
+        solver="portus",
+        solverRfqId=UUID("95a0f428-a6c4-4207-81b2-e47436741e9b"),
+        rfqId=UUID("846063db-1769-438b-8002-00fd981603df"),
+        nonce=HexBytes("0xade8af8413607c37361fcebe3b00cc3de354986c188efe9d6db0fa8c74843ad0"),
+        expiry=1750707521,
+        baseToken=Web3.to_checksum_address("0xaf88d065e77c8cC2239327C5EDb3A432268e5831"),
+        quoteToken=Web3.to_checksum_address("0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9"),
+        trader=Web3.to_checksum_address("0x9008D19f58AAbD9eD0D60971565AA8510560ab41"),
+        effectiveTrader=Web3.to_checksum_address("0x9008D19f58AAbD9eD0D60971565AA8510560ab41"),
+        baseTokenAmount=6358600000,  # using int for baseTokenAmount
+        quoteTokenAmount=None,
+        intentMetadata=intent_meta,
+    )
+    rfq_envelope = LiquoriceEnvelope(message=rfq_msg)
+    assert rfq_envelope.messageType == "rfq"

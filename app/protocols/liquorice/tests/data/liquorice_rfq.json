@@ -1,0 +1,19 @@
+{
+    "messageType": "rfq",
+    "message": {
+        "chainId": 42161,
+        "solver": "portus",
+        "solverRfqId": "95a0f428-a6c4-4207-81b2-e47436741e9b",
+        "rfqId": "846063db-1769-438b-8002-00fd981603df",
+        "nonce": "ade8af8413607c37361fcebe3b00cc3de354986c188efe9d6db0fa8c74843ad0",
+        "expiry": 1750707521,
+        "baseToken": "0xaf88d065e77c8cC2239327C5EDb3A432268e5831",
+        "quoteToken": "0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9",
+        "trader": "0x9008D19f58AAbD9eD0D60971565AA8510560ab41",
+        "effectiveTrader": "0x9008D19f58AAbD9eD0D60971565AA8510560ab41",
+        "baseTokenAmount": "6358600000",
+        "quoteTokenAmount": null,
+        "intentMetadata": {"source": "cow_protocol", "content": {"auctionId": 3824359}}
+    },
+    "timestamp": 1750707221629
+}
