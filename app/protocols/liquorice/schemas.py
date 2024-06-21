@@ -184,14 +184,6 @@ class RFQMessage(BaseModel):
         raise NotImplementedError("JSON serialization is not supported")
 
 
-class RFQEnvelope(BaseModel):
-    """Envelope for RFQ messages"""
-
-    model_config = ConfigDict(frozen=True)
-    messageType: Literal["rfq"]
-    message: RFQMessage
-
-
 class QuoteLevelLite(BaseModel):
     """
     Quote level Lite

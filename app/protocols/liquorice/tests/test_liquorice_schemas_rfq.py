@@ -12,7 +12,6 @@ from app.protocols.liquorice.schemas import (
     IntentMetadata,
     IntentMetadataContent,
     LiquoriceEnvelope,
-    RFQEnvelope,
     RFQMessage,
 )
 
@@ -45,7 +44,7 @@ valid_quote_envelope_text = (
 
 def test_parse_valid_rfq():
     """Test RFQMessage validation."""
-    rfq = RFQEnvelope.model_validate_json(json.dumps(VALID_RFQ_EXAMPLE_DICT))
+    rfq = LiquoriceEnvelope.model_validate_json(json.dumps(VALID_RFQ_EXAMPLE_DICT))
     assert rfq.messageType == "rfq"
     assert rfq.message.chainId == 42161
     assert rfq.message.solver == "portus"
@@ -72,13 +71,13 @@ def test_parse_valid_rfq_opposite_direction():
     rfq_opposite_dir = deepcopy(VALID_RFQ_EXAMPLE_DICT)
     rfq_opposite_dir["message"]["baseTokenAmount"] = None
     rfq_opposite_dir["message"]["quoteTokenAmount"] = "6358600000"
-    RFQEnvelope.model_validate_json(json.dumps(rfq_opposite_dir))
+    LiquoriceEnvelope.model_validate_json(json.dumps(rfq_opposite_dir))
 
 
 def test_parse_valid_rfq_max_uint256():
     rfq_max_uint256 = deepcopy(VALID_RFQ_EXAMPLE_DICT)
     rfq_max_uint256["message"]["baseTokenAmount"] = MAX_UINT256_STR
-    rfq = RFQEnvelope.model_validate_json(json.dumps(rfq_max_uint256))
+    rfq = LiquoriceEnvelope.model_validate_json(json.dumps(rfq_max_uint256))
     assert rfq.message.baseTokenAmount == MAX_UINT256_INT
 
 
@@ -88,27 +87,27 @@ def test_parse_rfq_when_bad_checksum_addresses():
         "baseToken"
     ] = "0xaf88d065e77c8cc2239327c5edb3a432268e5831"  # bad checksum address. All-lowercase
     with pytest.raises(ValueError, match="Bad Ethereum checksum"):
-        RFQEnvelope.model_validate_json(json.dumps(rfq_bad_address_csum))
+        LiquoriceEnvelope.model_validate_json(json.dumps(rfq_bad_address_csum))
     rfq_bad_address_csum = deepcopy(VALID_RFQ_EXAMPLE_DICT)
     rfq_bad_address_csum["message"][
         "baseToken"
     ] = "af88d065e77c8cc2239327c5edb3a432268e58"  # short
     with pytest.raises(ValueError, match="Bad Ethereum address"):
-        RFQEnvelope.model_validate_json(json.dumps(rfq_bad_address_csum))
+        LiquoriceEnvelope.model_validate_json(json.dumps(rfq_bad_address_csum))
     rfq_bad_address_csum = deepcopy(VALID_RFQ_EXAMPLE_DICT)
     rfq_bad_address_csum["message"]["quoteToken"] = "0xaf88d065e77c8cc2239327c5edb3a432268e5831"
     with pytest.raises(ValueError, match="Bad Ethereum checksum"):
-        RFQEnvelope.model_validate_json(json.dumps(rfq_bad_address_csum))
+        LiquoriceEnvelope.model_validate_json(json.dumps(rfq_bad_address_csum))
     rfq_bad_address_csum = deepcopy(VALID_RFQ_EXAMPLE_DICT)
     rfq_bad_address_csum["message"]["trader"] = "0xaf88d065e77c8cc2239327c5edb3a432268e5831"
     with pytest.raises(ValueError, match="Bad Ethereum checksum"):
-        RFQEnvelope.model_validate_json(json.dumps(rfq_bad_address_csum))
+        LiquoriceEnvelope.model_validate_json(json.dumps(rfq_bad_address_csum))
     rfq_bad_address_csum = deepcopy(VALID_RFQ_EXAMPLE_DICT)
     rfq_bad_address_csum["message"][
         "effectiveTrader"
     ] = "0xaf88d065e77c8cc2239327c5edb3a432268e5831"
     with pytest.raises(ValueError, match="Bad Ethereum checksum"):
-        RFQEnvelope.model_validate_json(json.dumps(rfq_bad_address_csum))
+        LiquoriceEnvelope.model_validate_json(json.dumps(rfq_bad_address_csum))
 
 
 def test_parse_rfq_when_bad_nonce():
@@ -117,11 +116,11 @@ def test_parse_rfq_when_bad_nonce():
         "nonce"
     ] = "ade8af8413607c37361fcebe3b00cc3de354986c188efe9d6db0fa8c74843ad"  # short nonce
     with pytest.raises(ValueError, match="nonce must be a 32-byte hex string"):
-        RFQEnvelope.model_validate_json(json.dumps(rfq_bad_nonce))
+        LiquoriceEnvelope.model_validate_json(json.dumps(rfq_bad_nonce))
     rfq_bad_nonce = deepcopy(VALID_RFQ_EXAMPLE_DICT)
     rfq_bad_nonce["message"]["nonce"] = "bla"  # non-hex nonce
     with pytest.raises(ValueError, match="nonce must be a 32-byte hex string"):
-        RFQEnvelope.model_validate_json(json.dumps(rfq_bad_nonce))
+        LiquoriceEnvelope.model_validate_json(json.dumps(rfq_bad_nonce))
 
 
 def test_parse_rfq_when_both_amounts_set():
@@ -131,7 +130,7 @@ def test_parse_rfq_when_both_amounts_set():
     with pytest.raises(
         ValueError, match="Exactly one of baseTokenAmount or quoteTokenAmount must be set"
     ):
-        RFQEnvelope.model_validate_json(json.dumps(rfq_both_amounts))
+        LiquoriceEnvelope.model_validate_json(json.dumps(rfq_both_amounts))
 
 
 def test_parse_rfq_when_both_amounts_missing():
@@ -141,18 +140,18 @@ def test_parse_rfq_when_both_amounts_missing():
     with pytest.raises(
         ValueError, match="Exactly one of baseTokenAmount or quoteTokenAmount must be set"
     ):
-        RFQEnvelope.model_validate_json(json.dumps(rfq_both_amounts_missing))
+        LiquoriceEnvelope.model_validate_json(json.dumps(rfq_both_amounts_missing))
 
 
 def test_parse_rfq_raise_when_expiry_wrong():
     rfq_wrong_expiry = deepcopy(VALID_RFQ_EXAMPLE_DICT)
     rfq_wrong_expiry["message"]["expiry"] = 2000000000_000  # milliseconds instead of seconds
     with pytest.raises(ValueError, match="Expiry must be a unix timestamp in seconds"):
-        RFQEnvelope.model_validate_json(json.dumps(rfq_wrong_expiry))
+        LiquoriceEnvelope.model_validate_json(json.dumps(rfq_wrong_expiry))
     rfq_wrong_expiry = deepcopy(VALID_RFQ_EXAMPLE_DICT)
     rfq_wrong_expiry["message"]["expiry"] = "2000000000"  # string instead of int
     with pytest.raises(ValueError, match="Expiry must be a positive integer"):
-        RFQEnvelope.model_validate_json(json.dumps(rfq_wrong_expiry))
+        LiquoriceEnvelope.model_validate_json(json.dumps(rfq_wrong_expiry))
 
 
 def test_envelope_init_dto_infer_rfq_type():
