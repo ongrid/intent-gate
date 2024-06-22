@@ -1,0 +1,54 @@
+import asyncio
+from logging import getLogger
+
+import websockets
+from pydantic import ValidationError
+from websockets.asyncio.client import ClientConnection
+
+from app.config.maker import MakerConfig
+
+from .schemas import LiquoriceEnvelope, MessageType, RFQQuoteMessage
+
+LIQUORICE_WS_URL = "wss://api.liquorice.tech/v1/maker/ws"
+
+log = getLogger(__name__)
+
+
+class LiquoriceClient:
+    def __init__(self, cfg_maker: MakerConfig) -> None:
+        self.uri = LIQUORICE_WS_URL
+        self.headers = {
+            "maker": cfg_maker.maker,
+            "authorization": cfg_maker.authorization,
+        }
+        self.rfqs = asyncio.Queue()  # Queue for outgoing RFQs
+        self.quotes: asyncio.Queue[RFQQuoteMessage] = asyncio.Queue()  # Queue for incoming quotes
+
+    async def _reader(self, ws: ClientConnection) -> None:
+        """Reads messages from the WebSocket and puts them into the rfqs queue."""
+        async for message in ws:
+            try:
+                log.debug("Rcvd: %s", message)
+                rfq = LiquoriceEnvelope.model_validate_json(message)
+                await self.rfqs.put(rfq.message)
+            except ValidationError as e:
+                log.error("Validation error: %s", e)
+                continue
+
+    async def _writer(self, ws: ClientConnection) -> None:
+        """Reads quote from the quotes queue and sends them over the WebSocket."""
+        while True:
+            quote_msg = await self.quotes.get()
+            assert isinstance(quote_msg, RFQQuoteMessage), "Expected RFQQuoteMessage"
+            raw_msg = LiquoriceEnvelope(
+                message=quote_msg, messageType=MessageType.RFQ_QUOTE
+            ).model_dump_json()
+            await ws.send(raw_msg)
+            log.debug("Sent: %s", raw_msg)
+
+    async def run(self) -> None:
+        """Connects to the Liquorice WebSocket and starts reading and writing messages."""
+        async with websockets.connect(self.uri, additional_headers=self.headers) as ws:
+            log.info("Connected to Liquorice WebSocket at %s", self.uri)
+            # Start the reader and writer tasks
+            await asyncio.gather(self._reader(ws), self._writer(ws))

@@ -15,6 +15,7 @@ from app.config.maker import MakerConfig
 from app.evm.registry import ChainRegistry
 from app.evm.service import ChainServiceMgr
 from app.log.log import get_uvicorn_log_config, setup_logging
+from app.protocols.liquorice.client import LiquoriceClient
 
 setup_logging()
 log = logging.getLogger(__name__)
@@ -33,15 +34,20 @@ async def lifespan(_app: FastAPI):
     log.info("Maker configuration loaded: %s", cfg_maker)
     cs_mgr = ChainServiceMgr(chain_rg)
     log.info("Starting intent gateway...")
-    task = asyncio.create_task(cs_mgr.run())  # long-lived coroutine
+    chain_svc_mgr_task = asyncio.create_task(cs_mgr.run())  # long-lived coroutine
+    liquorice_client_task = asyncio.create_task(
+        LiquoriceClient(cfg_maker).run()
+    )  # long-lived coroutine for Liquorice client
     try:
         yield
     finally:
         logging.info("Shutting down ChainServiceManager...")
         await cs_mgr.shutdown()  # graceful stop
-        task.cancel()
+        chain_svc_mgr_task.cancel()
+        liquorice_client_task.cancel()
         try:
-            await task
+            await chain_svc_mgr_task
+            await liquorice_client_task
         except asyncio.CancelledError:
             pass
 
