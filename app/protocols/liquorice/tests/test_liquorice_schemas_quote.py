@@ -2,9 +2,11 @@ import json
 from pathlib import Path
 from uuid import UUID
 
+import pytest
 from hexbytes import HexBytes
 
 from app.protocols.liquorice.schemas import (
+    QuoteLevelLite,
     RFQQuoteMessage,
 )
 
@@ -12,6 +14,7 @@ valid_quote_lite_envelope_text = (
     Path(__file__).parent / "data" / "liquorice_quote_lite.json"
 ).read_text()
 valid_quote_lite_envelope_json = json.loads(valid_quote_lite_envelope_text)
+valid_quote_level_dict = valid_quote_lite_envelope_json["message"]["levels"][0]
 
 
 def test_parse_valid_quote_lite_from_live_data():
@@ -33,3 +36,13 @@ def test_parse_valid_quote_lite_from_live_data():
         "0xa235ba3136acb14c5968f119af99983b0af5ea42349ec4f891c4f48ed97c3c6b43ef48ec75875c5400461bdaea02619e6db8e2b2c0daf5f15b5280c0d4067c571b"
     )
     assert quote_lite_msg.levels[0].type == "lite"
+
+
+def test_level_signature_validation():
+    """Test that level signatures can be in different formats."""
+    level = valid_quote_level_dict.copy()
+    del level["signature"]
+    with pytest.raises(ValueError, match="Non-hexadecimal digit found"):
+        QuoteLevelLite(**level, signature="0xbla")  # type: ignore[arg-type]
+    with pytest.raises(ValueError, match="signature must be bytes or hex string"):
+        QuoteLevelLite(**level, signature=123)  # type: ignore[arg-type]
