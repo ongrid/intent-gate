@@ -1,0 +1,82 @@
+[build-system]
+build-backend = "poetry.core.masonry.api"
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+
+[project]
+authors = [
+  {email = "kirill@ongrid.pro", name = "Kirill Varlamov"}
+]
+dependencies = [
+  "fastapi (>=0.115.12,<0.116.0)",
+  "uvicorn (>=0.34.3,<0.35.0)",
+  "web3[async] (>=7.12.0,<8.0.0)"
+]
+description = "Intent Gate"
+license = {text = "MIT"}
+name = "intent-gate"
+readme = "README.md"
+requires-python = ">=3.12,<4.0"
+version = "0.1.0"
+
+[tool.black]
+line-length = 99
+preview = true
+target-version = ["py313"]
+
+[tool.flake8]
+exclude = [
+  "./.mypy_cache/*,",
+  "./.venv/*",
+  ".DS_Store",
+  ".git",
+  ".tox",
+  "__pycache__"
+]
+ignore = ["E203", "E501", "E704", "W503"]
+max-line-length = 99
+
+[tool.isort]
+profile = "black"
+
+[tool.mypy]
+check_untyped_defs = true
+disable_error_code = [
+  "no-untyped-def",
+  "type-arg",
+  "var-annotated"
+]
+disallow_any_generics = true
+disallow_incomplete_defs = true
+disallow_untyped_calls = true
+disallow_untyped_decorators = true
+disallow_untyped_defs = true
+follow_imports_for_stubs = true
+ignore_missing_imports = true
+local_partial_types = true
+pretty = true
+show_error_context = true
+warn_redundant_casts = true
+warn_return_any = true
+warn_unused_configs = true
+warn_unused_ignores = true
+
+[tool.poetry]
+package-mode = false
+packages = [{include = "app"}]
+
+[tool.poetry.group.dev.dependencies]
+black = "^25.1.0"
+flake8 = "^7.2.0"
+flake8-pyproject = "^1.2.3"
+isort = "^6.0.1"
+mypy = "^1.16.0"
+pylint = "^3.3.7"
+pytest = "^8.4.0"
+pytest-asyncio = "^1.0.0"
+pytest-cov = "^6.1.1"
+toml-sort = "^0.24.2"
+
+[tool.pytest.ini_options]
+asyncio_default_fixture_loop_scope = "function"
+asyncio_mode = "auto"
+pythonpath = ["."]
