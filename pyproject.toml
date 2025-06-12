@@ -23,6 +23,10 @@ line-length = 99
 preview = true
 target-version = ["py313"]
 
+[tool.coverage.run]
+omit = ["*/__init__.py", "*/tests/*", "app/evm/chains/*", "app/evm/const.py", "app/types/*"]
+source = ["app"]
+
 [tool.flake8]
 exclude = [
   "./.mypy_cache/*,",
