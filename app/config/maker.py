@@ -29,7 +29,6 @@ class MakerConfig:
     authorization: str
     signer_priv_key: str
     maker_ws_url: str = "wss://api.liquorice.tech/v1/maker/ws"
-    settlement_address: str = "0x5210Dc2Fd7094BF596Bf19E15d1510873D30d15c"  # Same for all chains
 
     @classmethod
     def from_env(cls) -> "MakerConfig":

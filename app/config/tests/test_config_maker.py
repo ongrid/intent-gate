@@ -25,7 +25,6 @@ def test_maker_config_from_env_success():
         == "deadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef"
     )
     assert config.maker_ws_url == "wss://api.liquorice.tech/v1/maker/ws"
-    assert config.settlement_address == "0x5210Dc2Fd7094BF596Bf19E15d1510873D30d15c"
 
 
 def test_maker_config_missing_maker_id():
@@ -74,6 +73,23 @@ def test_maker_config_missing_signer_key():
         MakerConfig.from_env()
 
     assert str(exc_info.value) == "SIGNER_PRIV_KEY env var is not set"
+
+
+def test_maker_config_invalid_signer_key():
+    """Test MakerConfig creation fails when SIGNER_PRIV_KEY is missing."""
+    # Setup partial environment
+    os.environ["MAKER_SESS_ID"] = "test_maker_id"
+    os.environ["MAKER_SESS_AUTH"] = "4aa0e0f2-50eb-48a0-b78e-b6bb446ccd7b"
+    os.environ["SIGNER_PRIV_KEY"] = (
+        "deadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbe"  # Invalid length of pk
+    )
+
+    with pytest.raises(ValueError) as exc_info:
+        MakerConfig.from_env()
+
+    assert "Invalid SIGNER_PRIV_KEY: The private key must be exactly 32 bytes" in str(
+        exc_info.value
+    )
 
 
 @pytest.fixture(autouse=True)
