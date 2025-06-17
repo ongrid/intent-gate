@@ -8,8 +8,8 @@ from web3.utils.subscriptions import LogsSubscription
 
 from app.evm.registry import ChainRegistry
 from app.evm.service import ChainService, ChainServiceMgr
-from app.types.chain import Chain
-from app.types.token import ERC20Token
+from app.schemas.chain import Chain
+from app.schemas.token import ERC20Token
 
 
 @pytest.fixture

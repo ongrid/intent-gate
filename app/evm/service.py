@@ -16,7 +16,7 @@ from app.evm.const import ERC20_TRANSFER_TOPIC, ERC20_ZERO_ADDRESS
 from app.evm.helpers import encode_address
 from app.evm.registry import ChainRegistry
 
-from ..types.chain import Chain
+from ..schemas.chain import Chain
 
 log = getLogger(__name__)
 

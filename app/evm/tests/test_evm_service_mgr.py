@@ -7,7 +7,7 @@ import pytest
 
 from app.evm.registry import ChainRegistry
 from app.evm.service import ChainServiceMgr
-from app.types.chain import Chain
+from app.schemas.chain import Chain
 
 
 @pytest.fixture

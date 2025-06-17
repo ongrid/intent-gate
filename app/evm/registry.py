@@ -9,8 +9,8 @@ from urllib.parse import urlparse
 
 from web3 import Web3
 
-from ..types.chain import Chain
-from ..types.token import ERC20Token
+from ..schemas.chain import Chain
+from ..schemas.token import ERC20Token
 
 CHAINS_INVENTORY_MODULE = "app.evm.chains"
 CHAIN_WS_URL_ENV_POSTFIX = "_WS_URL"

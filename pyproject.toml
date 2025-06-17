@@ -24,7 +24,7 @@ preview = true
 target-version = ["py313"]
 
 [tool.coverage.run]
-omit = ["*/__init__.py", "*/tests/*", "app/evm/chains/*", "app/evm/const.py", "app/types/*"]
+omit = ["*/__init__.py", "*/tests/*", "app/evm/chains/*", "app/evm/const.py", "app/schemas/*"]
 source = ["app"]
 
 [tool.flake8]

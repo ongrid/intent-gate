@@ -6,7 +6,7 @@ from unittest.mock import patch
 import pytest
 
 from app.evm.registry import ChainRegistry
-from app.types.token import ERC20Token
+from app.schemas.token import ERC20Token
 
 ENVS = {
     "ETH_WS_URL": "wss://eth.example.com",

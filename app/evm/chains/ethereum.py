@@ -1,7 +1,7 @@
 # pylint: disable=missing-module-docstring,duplicate-code
 
-from ...types.chain import Chain
-from ...types.token import ERC20Token
+from ...schemas.chain import Chain
+from ...schemas.token import ERC20Token
 
 CHAIN_ID = 1
 CHAIN = Chain(
