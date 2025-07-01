@@ -15,7 +15,9 @@ from app.config.maker import MakerConfig
 from app.evm.registry import ChainRegistry
 from app.evm.service import ChainServiceMgr
 from app.log.log import get_uvicorn_log_config, setup_logging
+from app.markets.markets import MarketState
 from app.protocols.liquorice.client import LiquoriceClient
+from app.quoter.quoter import LiquoriceQuoter
 
 setup_logging()
 log = logging.getLogger(__name__)
@@ -35,9 +37,16 @@ async def lifespan(_app: FastAPI):
     cs_mgr = ChainServiceMgr(chain_rg)
     log.info("Starting intent gateway...")
     chain_svc_mgr_task = asyncio.create_task(cs_mgr.run())  # long-lived coroutine
+    log.info("Starting Liquorice client...")
+    liq_client = LiquoriceClient(cfg_maker)
     liquorice_client_task = asyncio.create_task(
-        LiquoriceClient(cfg_maker).run()
+        liq_client.run()
     )  # long-lived coroutine for Liquorice client
+    markets = MarketState()
+    log.info("Starting Quoter service...")
+    quoter = LiquoriceQuoter(liq_client.out_rfqs, liq_client.in_quotes, markets)
+    quoter_task = asyncio.create_task(quoter.run())  # long-lived coroutine for Quoter
+    log.info("Intent gateway started successfully")
     try:
         yield
     finally:
@@ -45,9 +54,11 @@ async def lifespan(_app: FastAPI):
         await cs_mgr.shutdown()  # graceful stop
         chain_svc_mgr_task.cancel()
         liquorice_client_task.cancel()
+        quoter_task.cancel()
         try:
             await chain_svc_mgr_task
             await liquorice_client_task
+            await quoter_task
         except asyncio.CancelledError:
             pass
 

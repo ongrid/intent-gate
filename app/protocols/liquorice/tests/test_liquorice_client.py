@@ -78,7 +78,7 @@ async def test_liquorice_client_run_relays_messages():
     )
 
     # TODO: Put realistic quote into the outbound queue
-    await client.quotes.put(quote_lite_msg_dto)
+    await client.in_quotes.put(quote_lite_msg_dto)
 
     with patch(
         "app.protocols.liquorice.client.websockets.connect",
@@ -94,14 +94,14 @@ async def test_liquorice_client_run_relays_messages():
         with pytest.raises(asyncio.CancelledError):
             await task
 
-        assert not client.rfqs.empty()
-        rfq = await client.rfqs.get()
+        assert not client.out_rfqs.empty()
+        rfq = await client.out_rfqs.get()
         assert isinstance(rfq, RFQMessage)
         assert rfq.solverRfqId == UUID("95a0f428-a6c4-4207-81b2-e47436741e9b")
         assert rfq.rfqId == UUID("846063db-1769-438b-8002-00fd981603df")
         assert rfq.chainId == 42161
         assert rfq.solver == "portus"
 
-        assert client.quotes.empty()
+        assert client.in_quotes.empty()
         assert len(ws_mock.sent) == 1
         assert ws_mock.sent[0] == expected_quote_raw_msg
