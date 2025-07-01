@@ -195,7 +195,7 @@ class QuoteLevelLite(BaseModel):
     """
 
     model_config = ConfigDict(
-        frozen=True,
+        frozen=False,
         arbitrary_types_allowed=True,
         extra="forbid",
     )
@@ -258,9 +258,12 @@ class RFQQuoteMessage(BaseModel):
     but the quoted amounts must not exceed those in the RFQ.
     """
 
-    model_config = ConfigDict(frozen=True)
+    model_config = ConfigDict(frozen=False)
     rfqId: UUID
     levels: List[QuoteLevelLite]  # extend this if other level types are added
+    _rfq: Annotated[
+        RFQMessage, Field(exclude=True, default=None, description="Request RFQ message")
+    ]
 
 
 T = TypeVar("T", RFQMessage, RFQQuoteMessage)

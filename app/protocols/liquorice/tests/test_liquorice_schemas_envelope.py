@@ -1,3 +1,5 @@
+import json
+from pathlib import Path
 from uuid import UUID
 
 import pytest
@@ -12,6 +14,10 @@ from app.protocols.liquorice.schemas import (
     QuoteLevelLite,
     RFQMessage,
     RFQQuoteMessage,
+)
+
+EXAMPLE_RFQ_MESSAGE_DICT = json.loads(
+    (Path(__file__).parent / "data" / "liquorice_rfq.json").read_text()
 )
 
 
@@ -36,7 +42,9 @@ def test_envelope_init_infer_quote_type():
         )
     )
     quote_lite_msg = RFQQuoteMessage(
-        rfqId=UUID("2aca5f16-defd-4f0c-9d4e-f219d69cbd7b"), levels=levels
+        rfqId=UUID("2aca5f16-defd-4f0c-9d4e-f219d69cbd7b"),
+        levels=levels,
+        _rfq=RFQMessage(**EXAMPLE_RFQ_MESSAGE_DICT["message"]),
     )
     quote_envelope = LiquoriceEnvelope(message=quote_lite_msg)
     assert quote_envelope.messageType == "rfqQuote"
@@ -69,7 +77,11 @@ def test_envelope_init_raise_when_inconsistent_types():
     """Test that LiquoriceEnvelope raises an error when messageType does not match message type."""
     with pytest.raises(ValueError, match="Message type mismatch"):
         LiquoriceEnvelope(
-            message=RFQQuoteMessage(rfqId=UUID("2aca5f16-defd-4f0c-9d4e-f219d69cbd7b"), levels=[]),
+            message=RFQQuoteMessage(
+                rfqId=UUID("2aca5f16-defd-4f0c-9d4e-f219d69cbd7b"),
+                levels=[],
+                _rfq=RFQMessage(**EXAMPLE_RFQ_MESSAGE_DICT["message"]),
+            ),
             messageType=MessageType.RFQ,
         )
 
@@ -80,6 +92,10 @@ def test_envelope_init_infer_raise_when_unknown_type():
         LiquoriceEnvelope(message=IntentMetadataContent(auctionId=0))  # type: ignore[type-var]
     with pytest.raises(ValueError, match="Unknown message type, cannot infer message type"):
         LiquoriceEnvelope(
-            message=RFQQuoteMessage(rfqId=UUID("2aca5f16-defd-4f0c-9d4e-f219d69cbd7b"), levels=[]),
+            message=RFQQuoteMessage(
+                rfqId=UUID("2aca5f16-defd-4f0c-9d4e-f219d69cbd7b"),
+                levels=[],
+                _rfq=RFQMessage(**EXAMPLE_RFQ_MESSAGE_DICT["message"]),
+            ),
             messageType=MessageType.UNKNOWN,
         )
