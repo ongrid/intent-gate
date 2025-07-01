@@ -1,7 +1,7 @@
-# TODO: Move signer logic to EVM module and separate coroutine
 from dataclasses import dataclass
 
 from eth_abi import encode
+from eth_typing import Hash32
 from eth_utils import keccak, to_checksum_address
 
 EIP712_DOMAIN_TYPEHASH = keccak(
@@ -36,58 +36,62 @@ class SignableRfqQuoteLevel:
     trader: str
 
     @property
-    def _domain_separator(self) -> bytes:
+    def _domain_separator(self) -> Hash32:
         """Generate the EIP-712 domain separator for the RFQ quote level."""
-        return keccak(
-            encode(
-                ["bytes32", "bytes32", "bytes32", "uint256", "address"],
-                [
-                    EIP712_DOMAIN_TYPEHASH,
-                    DOMAIN_NAME,
-                    DOMAIN_VERSION,
-                    self.chain_id,
-                    self.settlement_contract,
-                ],
+        return Hash32(
+            keccak(
+                encode(
+                    ["bytes32", "bytes32", "bytes32", "uint256", "address"],
+                    [
+                        EIP712_DOMAIN_TYPEHASH,
+                        DOMAIN_NAME,
+                        DOMAIN_VERSION,
+                        self.chain_id,
+                        self.settlement_contract,
+                    ],
+                )
             )
         )
 
     @property
-    def _struct_hash(self) -> bytes:
+    def _struct_hash(self) -> Hash32:
         rfq_id_hash = keccak(encode(["string"], [str(self.rfq_id)]))
-        return keccak(
-            encode(
-                [
-                    "bytes32",
-                    "bytes32",
-                    "uint256",
-                    "address",
-                    "address",
-                    "address",
-                    "address",
-                    "uint256",
-                    "uint256",
-                    "uint256",
-                    "uint256",
-                    "address",
-                ],
-                [
-                    SINGLE_ORDER_TYPEHASH,
-                    rfq_id_hash,
-                    int(self.nonce, 16),
-                    to_checksum_address(self.trader),
-                    to_checksum_address(self.effective_trader),
-                    to_checksum_address(self.base_token),
-                    to_checksum_address(self.quote_token),
-                    int(self.base_token_amount),
-                    int(self.quote_token_amount),
-                    int(self.min_quote_token_amount),
-                    int(self.quote_expiry),
-                    to_checksum_address(self.recipient),
-                ],
+        return Hash32(
+            keccak(
+                encode(
+                    [
+                        "bytes32",
+                        "bytes32",
+                        "uint256",
+                        "address",
+                        "address",
+                        "address",
+                        "address",
+                        "uint256",
+                        "uint256",
+                        "uint256",
+                        "uint256",
+                        "address",
+                    ],
+                    [
+                        SINGLE_ORDER_TYPEHASH,
+                        rfq_id_hash,
+                        int(self.nonce, 16),
+                        to_checksum_address(self.trader),
+                        to_checksum_address(self.effective_trader),
+                        to_checksum_address(self.base_token),
+                        to_checksum_address(self.quote_token),
+                        int(self.base_token_amount),
+                        int(self.quote_token_amount),
+                        int(self.min_quote_token_amount),
+                        int(self.quote_expiry),
+                        to_checksum_address(self.recipient),
+                    ],
+                )
             )
         )
 
     @property
-    def hash(self) -> bytes:
+    def hash(self) -> Hash32:
         """Generate the full EIP-712 digest for the RFQ quote level."""
-        return keccak(EIP191_HEADER + self._domain_separator + self._struct_hash)
+        return Hash32(keccak(EIP191_HEADER + self._domain_separator + self._struct_hash))
