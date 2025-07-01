@@ -7,10 +7,7 @@ from app.protocols.liquorice.signer import SignableRfqQuoteLevel
 
 # Signable object vector example is taken from
 # https://liquorice.gitbook.io/liquorice-docs/for-market-makers/basic-market-making-api
-with open(Path(__file__).parent / "data" / "signable_lvl.json", "r") as f:
-    signable_lvl_dict = json.load(f)
-
-
+signable_lvl_dict = json.loads((Path(__file__).parent / "data" / "signable_lvl.json", "r").read_text())
 signable_lvl = SignableRfqQuoteLevel(**signable_lvl_dict)
 
 
