@@ -21,6 +21,7 @@ def mock_chains() -> List[Chain]:
             gas_token="GAS123",
             ws_rpc_url="wss://test.chain123.com",
             liquorice_settlement_address="0xAcA684A3F64e0eae4812B734E3f8f205D3EEd167",
+            active=True,
         ),
         Chain(
             id=124,
@@ -29,6 +30,16 @@ def mock_chains() -> List[Chain]:
             gas_token="GAS124",
             ws_rpc_url="wss://test.chain124.com",
             liquorice_settlement_address="0xAcA684A3F64e0eae4812B734E3f8f205D3EEd167",
+            active=True,
+        ),
+        Chain(
+            id=125,
+            name="Chain 125",
+            short_names=["chain_125"],
+            gas_token="GAS125",
+            ws_rpc_url="wss://test.chain125.com",
+            liquorice_settlement_address="0xAcA684A3F64e0eae4812B734E3f8f205D3EEd167",
+            active=False,  # Inactive chain to check handling of non-active chains in Service Mgr
         ),
     ]
 
@@ -54,7 +65,7 @@ async def test_chainservice_mgr_init(mock_registry: ChainRegistry):
     """Test ChainServiceMgr initialization."""
     manager = ChainServiceMgr(mock_registry)
 
-    assert len(manager.services) == len(mock_registry.chains)
+    assert len(manager.services) == len(mock_registry.chains) - 1  # Exclude inactive chain
     assert manager.chain_registry == mock_registry
 
     service = manager.services[0]

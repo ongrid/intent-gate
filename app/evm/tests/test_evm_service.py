@@ -23,6 +23,7 @@ def mock_chain() -> Chain:
         ws_rpc_url="wss://test.chain123.com",
         liquorice_settlement_address="0xAcA684A3F64e0eae4812B734E3f8f205D3EEd167",
         tokens=[],
+        active=True,
     )
     chain.tokens.append(
         ERC20Token(

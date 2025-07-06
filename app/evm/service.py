@@ -30,7 +30,12 @@ class ChainServiceMgr:  # pylint: disable=too-few-public-methods
         self.chain_registry = chain_registry
         self.services: List["ChainService"] = []
         for chain in self.chain_registry.chains:
-            self.services.append(ChainService(self, chain))
+            if chain.active:
+                self.services.append(ChainService(self, chain))
+            else:
+                log.warning(
+                    "Chain %s %s is not active, skipping service creation", chain.name, chain.id
+                )
 
     async def run(self) -> None:
         """Run all chain services."""
@@ -66,6 +71,10 @@ class ChainService:
     def __init__(self, mgr: ChainServiceMgr, chain: Chain):
         self.mgr = mgr
         self.chain = chain
+        assert self.chain is not None, "Chain must be set before initializing ChainService"
+        log.debug("Initializing ChainService for %s", self.chain.name)
+        assert isinstance(self.chain, Chain), "Chain must be an instance of Chain"
+        assert chain.active, "Chain must be active to create a service"
         self.is_running: bool = False
         self.task: Optional[asyncio.Task] = None
         self.subscription_handler_task: Optional[asyncio.Task] = None
