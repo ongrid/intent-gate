@@ -16,6 +16,6 @@ class Chain:
     short_names: List[str] = field(default_factory=list)
     gas_token: str = "ETH"
     poa: bool = False
-    active: bool = True
+    active: bool = False
     tokens: List = field(default_factory=list)
     ws_rpc_url: Optional[str] = None

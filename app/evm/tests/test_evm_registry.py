@@ -108,7 +108,29 @@ def test_from_env_valid_ws_urls(registry_from_inventory: ChainRegistry):
     with patch.dict(os.environ, ENVS):
         registry_from_inventory.from_env()
         assert eth_chain.ws_rpc_url == "wss://eth.example.com"
+        assert eth_chain.active is True
         assert base_chain.ws_rpc_url == "wss://base.example.com"
+        assert base_chain.active is True
+        assert arb_chain.ws_rpc_url == "ws://arbitrum.example.com"
+        assert arb_chain.active is True
+
+
+def test_from_env_inactive_when_missing_ws_urls(registry_from_inventory: ChainRegistry):
+    """Test chains are inactive when WebSocket URLs are missing."""
+    PARTIALLY_MISSING_ENVS = ENVS.copy()
+    del PARTIALLY_MISSING_ENVS["ETH_WS_URL"]
+    with patch.dict(os.environ, PARTIALLY_MISSING_ENVS, clear=True):
+        registry_from_inventory.from_env()
+        eth_chain = registry_from_inventory.get_chain_by_id(1)
+        assert eth_chain is not None
+        assert eth_chain.ws_rpc_url == ""  # Should be empty if not set
+        assert eth_chain.active is False  # Chain should be inactive if no URL set
+        base_chain = registry_from_inventory.get_chain_by_id(8453)
+        assert base_chain is not None
+        assert base_chain.ws_rpc_url == "wss://base.example.com"
+        assert base_chain.active is True
+        arb_chain = registry_from_inventory.get_chain_by_id(42161)
+        assert arb_chain is not None
         assert arb_chain.ws_rpc_url == "ws://arbitrum.example.com"
 
 

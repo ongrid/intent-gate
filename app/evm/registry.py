@@ -105,11 +105,14 @@ class ChainRegistry:
                         ws_rpc_url,
                     )
                     chain.ws_rpc_url = ws_rpc_url
+                    chain.active = True
                     break
             else:
                 log.warning(
                     "Chain %s (%s) does not have a valid RPC URL set", chain.name, chain.id
                 )
+                chain.ws_rpc_url = ""
+                chain.active = False
 
     def get_chain_by_id(self, chain_id: int) -> Optional[Chain]:
         """Get a chain instance by its name or ID."""

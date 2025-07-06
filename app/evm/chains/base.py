@@ -10,7 +10,6 @@ CHAIN = Chain(
     short_names=["base"],
     gas_token="BASE",
     poa=False,
-    active=False,
     liquorice_settlement_address="0xAcA684A3F64e0eae4812B734E3f8f205D3EEd167",
 )
 WETH = ERC20Token(
