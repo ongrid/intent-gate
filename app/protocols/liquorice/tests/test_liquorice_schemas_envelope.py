@@ -7,6 +7,7 @@ from hexbytes import HexBytes
 from web3 import Web3
 
 from app.protocols.liquorice.schemas import (
+    EmptyMessage,
     IntentMetadata,
     IntentMetadataContent,
     LiquoriceEnvelope,
@@ -19,6 +20,9 @@ from app.protocols.liquorice.schemas import (
 EXAMPLE_RFQ_MESSAGE_DICT = json.loads(
     (Path(__file__).parent / "data" / "liquorice_rfq.json").read_text()
 )
+EXAMPLE_CONNECTED_MESSAGE_TEXT = (
+    Path(__file__).parent / "data" / "connected_msg.json"
+).read_text()
 
 
 def test_envelope_init_infer_quote_type():
@@ -71,6 +75,13 @@ def test_envelope_init_infer_rfq_type():
     )
     rfq_envelope = LiquoriceEnvelope(message=rfq_msg)
     assert rfq_envelope.messageType == "rfq"
+
+
+def test_envelope_init_infer_connected_type():
+    connected_envelope = LiquoriceEnvelope.model_validate_json(EXAMPLE_CONNECTED_MESSAGE_TEXT)
+    assert connected_envelope.message == EmptyMessage()
+    assert connected_envelope.timestamp == 1751815125351
+    assert connected_envelope.messageType == MessageType.CONNECTED
 
 
 def test_envelope_init_raise_when_inconsistent_types():

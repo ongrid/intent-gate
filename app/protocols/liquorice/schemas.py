@@ -31,6 +31,7 @@ MAX_UINT256 = 2**256 - 1
 class MessageType(str, Enum):
     RFQ = "rfq"
     RFQ_QUOTE = "rfqQuote"
+    CONNECTED = "connected"
     UNKNOWN = "unknown"
 
 
@@ -48,6 +49,10 @@ class IntentMetadata(BaseModel):
 
     source: Literal["cow_protocol"]
     content: IntentMetadataContent
+
+
+class EmptyMessage(BaseModel):
+    model_config = ConfigDict(frozen=True, extra="forbid")
 
 
 class RFQMessage(BaseModel):
@@ -266,7 +271,7 @@ class RFQQuoteMessage(BaseModel):
     ]
 
 
-T = TypeVar("T", RFQMessage, RFQQuoteMessage)
+T = TypeVar("T", RFQMessage, RFQQuoteMessage, EmptyMessage)
 
 
 class LiquoriceEnvelope(BaseModel, Generic[T]):
@@ -274,6 +279,7 @@ class LiquoriceEnvelope(BaseModel, Generic[T]):
 
     messageType: MessageType = MessageType.UNKNOWN
     message: T
+    timestamp: Optional[int] = None
 
     @model_validator(mode="before")
     @classmethod
@@ -291,6 +297,7 @@ class LiquoriceEnvelope(BaseModel, Generic[T]):
         msg_class_map: Dict[MessageType, Type[BaseModel]] = {
             MessageType.RFQ: RFQMessage,
             MessageType.RFQ_QUOTE: RFQQuoteMessage,
+            MessageType.CONNECTED: EmptyMessage,
         }
         expected_cls = msg_class_map.get(self.messageType)
         if expected_cls and not isinstance(self.message, expected_cls):

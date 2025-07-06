@@ -56,6 +56,7 @@ class MockWsConnection:
             self.msg_all_sent.set()
 
 
+connected_text = (Path(__file__).parent / "data" / "connected_msg.json").read_text()
 rfq_text = (Path(__file__).parent / "data" / "liquorice_rfq.json").read_text()
 quote_text = (Path(__file__).parent / "data" / "liquorice_quote_lite.json").read_text()
 quote_lite_text_msg_only_text = json.dumps(json.loads(quote_text)["message"])
@@ -74,7 +75,8 @@ async def test_liquorice_client_run_relays_messages():
 
     # Mock WebSocket connection
     ws_mock = MockWsConnection(
-        msgs_to_receive=[rfq_text], msgs_expected_to_be_sent=[expected_quote_raw_msg]
+        msgs_to_receive=[connected_text, rfq_text],
+        msgs_expected_to_be_sent=[expected_quote_raw_msg],
     )
 
     # TODO: Put realistic quote into the outbound queue

@@ -40,7 +40,14 @@ class LiquoriceClient:
             try:
                 log.debug("Rcvd: %s", message)
                 rfq = LiquoriceEnvelope.model_validate_json(message)
-                await self.out_rfqs.put(rfq.message)
+                if rfq.messageType == MessageType.CONNECTED:
+                    log.debug("Message type CONNECTED received, ignoring")
+                    continue
+                elif rfq.messageType == MessageType.RFQ:
+                    log.debug("Message type RFQ received, processing")
+                    await self.out_rfqs.put(rfq.message)
+                else:
+                    log.warning("Unexpected message type Rcvd: %s", rfq.messageType)
             except ValidationError as e:
                 log.error("Validation error: %s", e)
                 continue
