@@ -34,7 +34,8 @@ async def lifespan(_app: FastAPI):
     log.info("Initializing intent gateway configuration...")
     cfg_maker = MakerConfig.from_env()
     log.info("Maker configuration loaded: %s", cfg_maker)
-    cs_mgr = ChainServiceMgr(chain_rg)
+    markets = MarketState()
+    cs_mgr = ChainServiceMgr(chain_rg, markets)
     log.info("Starting intent gateway...")
     chain_svc_mgr_task = asyncio.create_task(cs_mgr.run())  # long-lived coroutine
     log.info("Starting Liquorice client...")
@@ -42,7 +43,6 @@ async def lifespan(_app: FastAPI):
     liquorice_client_task = asyncio.create_task(
         liq_client.run()
     )  # long-lived coroutine for Liquorice client
-    markets = MarketState()
     log.info("Starting Quoter service...")
     quoter = LiquoriceQuoter(liq_client.out_rfqs, liq_client.in_quotes, markets)
     quoter_task = asyncio.create_task(quoter.run())  # long-lived coroutine for Quoter

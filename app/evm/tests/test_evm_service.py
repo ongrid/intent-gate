@@ -9,6 +9,7 @@ from web3.utils.subscriptions import LogsSubscription
 
 from app.evm.registry import ChainRegistry
 from app.evm.service import ChainService, ChainServiceMgr
+from app.markets.markets import MarketState
 from app.schemas.chain import Chain
 from app.schemas.token import ERC20Token
 
@@ -114,7 +115,7 @@ def mock_chain_service(mock_chain: Chain) -> ChainService:
     registry.chains.append(mock_chain)
     registry.chain_by_id[mock_chain.id] = mock_chain
 
-    manager = ChainServiceMgr(registry)
+    manager = ChainServiceMgr(registry, MarketState())
     return ChainService(manager, mock_chain)
 
 
@@ -194,6 +195,13 @@ async def test_chain_service_connect_web3_subscribe_and_process(
         registry = ChainRegistry()
         registry.chains.append(mock_chain)
         registry.chain_by_id[mock_chain.id] = mock_chain
-        manager = ChainServiceMgr(registry)
+        manager = ChainServiceMgr(registry, MarketState())
         chain_service = ChainService(manager, mock_chain)
-        await chain_service.connect_web3_subscribe_and_process()
+
+        # Create a mock ERC20Service instance
+        mock_erc20_service = AsyncMock()
+        mock_erc20_service.start = AsyncMock()
+        mock_erc20_service.stop = AsyncMock()
+        with patch("app.evm.service.ERC20Service", return_value=mock_erc20_service):
+            await chain_service.connect_web3_subscribe_and_process()
+            mock_erc20_service.start.assert_called_once()

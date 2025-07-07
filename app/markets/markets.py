@@ -1,6 +1,9 @@
+from typing import Generator
+
 import networkx as nx
 
 from app.evm.chains import arbitrum, ethereum
+from app.schemas.token import ERC20Token
 
 
 class MarketState:  # pylint: disable=too-few-public-methods
@@ -23,3 +26,9 @@ class MarketState:  # pylint: disable=too-few-public-methods
         self.graph.add_edge(ethereum.DAI, ethereum.USDT, weight=1.0)
         self.graph.add_edge(ethereum.USDC, ethereum.DAI, weight=1.0)
         self.graph.add_edge(ethereum.DAI, ethereum.USDC, weight=1.0)
+
+    def get_tokens_by_chain_id(self, chain_id: int) -> Generator[ERC20Token, None, None]:
+        """Generator that yields all tokens for a specific chain."""
+        for node in self.graph.nodes():
+            if isinstance(node, ERC20Token) and node.chain.id == chain_id:
+                yield node

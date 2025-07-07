@@ -8,7 +8,7 @@ from eth_typing import ChecksumAddress
 from .chain import Chain
 
 
-@dataclass(frozen=True)
+@dataclass
 class ERC20Token:
     """Represents an ERC20 token with its chain and contract details."""
 
@@ -17,6 +17,9 @@ class ERC20Token:
     chain: Chain
     address: ChecksumAddress
     decimals: int = 18
+    # Updated by ERC20Service
+    raw_balance: int = 0
+    last_updated_block: int = 0
 
     def __hash__(self) -> int:
         """Hash based on chain and address which uniquely identify a token.

@@ -13,8 +13,10 @@ from web3.utils.subscriptions import (
 )
 
 from app.evm.const import ERC20_TRANSFER_TOPIC, ERC20_ZERO_ADDRESS
+from app.evm.erc20_service import ERC20Service
 from app.evm.helpers import encode_address
 from app.evm.registry import ChainRegistry
+from app.markets.markets import MarketState
 
 from ..schemas.chain import Chain
 
@@ -25,9 +27,11 @@ class ChainServiceMgr:  # pylint: disable=too-few-public-methods
     """Singleton manager for ChainServices."""
 
     services: List["ChainService"] = []
+    markets: MarketState
 
-    def __init__(self, chain_registry: ChainRegistry):
+    def __init__(self, chain_registry: ChainRegistry, markets: MarketState) -> None:
         self.chain_registry = chain_registry
+        self.markets = markets
         self.services: List["ChainService"] = []
         for chain in self.chain_registry.chains:
             if chain.active:
@@ -78,6 +82,7 @@ class ChainService:
         self.is_running: bool = False
         self.task: Optional[asyncio.Task] = None
         self.subscription_handler_task: Optional[asyncio.Task] = None
+        self.erc20_service: ERC20Service
 
     async def log_handler(
         self,
@@ -136,8 +141,11 @@ class ChainService:
                 w3.subscription_manager.handle_subscriptions()
             )
             log.info("Web3 subscription manager started for %s", self.chain.name)
+            self.erc20_service = ERC20Service(self.chain, w3, self.mgr.markets)
+            await self.erc20_service.start()
             await self.subscription_handler_task
             log.info("Subscription ended, closing connection.")
+            await self.erc20_service.stop()
 
     async def start(self) -> None:
         """Start all chain service workers."""

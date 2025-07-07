@@ -7,6 +7,7 @@ import pytest
 
 from app.evm.registry import ChainRegistry
 from app.evm.service import ChainServiceMgr
+from app.markets.markets import MarketState
 from app.schemas.chain import Chain
 
 
@@ -57,13 +58,13 @@ def mock_registry(mock_chains: List[Chain]) -> ChainRegistry:
 @pytest.fixture
 async def service_manager(mock_registry: ChainRegistry) -> ChainServiceMgr:
     """Create a ChainServiceMgr instance with mocked registry."""
-    return ChainServiceMgr(mock_registry)
+    return ChainServiceMgr(mock_registry, MarketState())
 
 
 @pytest.mark.asyncio
 async def test_chainservice_mgr_init(mock_registry: ChainRegistry):
     """Test ChainServiceMgr initialization."""
-    manager = ChainServiceMgr(mock_registry)
+    manager = ChainServiceMgr(mock_registry, MarketState())
 
     assert len(manager.services) == len(mock_registry.chains) - 1  # Exclude inactive chain
     assert manager.chain_registry == mock_registry
