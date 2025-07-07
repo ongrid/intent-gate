@@ -22,8 +22,8 @@ ERC20_ABI = [
         "type": "function",
     }
 ]
-ERC20_UPDATE_INTERVAL = 10  # seconds, how often to update balances
-ERC20_MIN_UPDATE_DELAY = 0.1  # seconds, minimum delay between updates
+ERC20_UPDATE_INTERVAL = 60  # seconds, how often to update balances
+ERC20_MIN_UPDATE_DELAY = 1  # seconds, minimum delay between updates
 
 
 class ERC20Service:
