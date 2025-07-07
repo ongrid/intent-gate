@@ -4,6 +4,7 @@ import asyncio
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
+from web3.main import to_checksum_address
 from web3.utils.subscriptions import LogsSubscription
 
 from app.evm.registry import ChainRegistry
@@ -21,7 +22,9 @@ def mock_chain() -> Chain:
         short_names=["chain_123"],
         gas_token="GAS123",
         ws_rpc_url="wss://test.chain123.com",
-        liquorice_settlement_address="0xAcA684A3F64e0eae4812B734E3f8f205D3EEd167",
+        liquorice_settlement_address=to_checksum_address(
+            "0xAcA684A3F64e0eae4812B734E3f8f205D3EEd167"
+        ),
         tokens=[],
         active=True,
     )
@@ -30,7 +33,7 @@ def mock_chain() -> Chain:
             name="Token 1",
             symbol="TKN1",
             chain=chain,
-            address="0xe688b84b23f322a994A53dbF8E15FA82CDB71127",
+            address=to_checksum_address("0xe688b84b23f322a994A53dbF8E15FA82CDB71127"),
             decimals=18,
         )
     )
@@ -39,7 +42,7 @@ def mock_chain() -> Chain:
             name="Token 2",
             symbol="TKN2",
             chain=chain,
-            address="0x9b271990873D677c93B3668f813C13770878B421",
+            address=to_checksum_address("0x9b271990873D677c93B3668f813C13770878B421"),
             decimals=18,
         )
     )
@@ -48,7 +51,7 @@ def mock_chain() -> Chain:
             name="Token 3",
             symbol="TKN3",
             chain=chain,
-            address="0x06D3b2CDC00503133090fc5ccCB027C0a636a543",
+            address=to_checksum_address("0x06D3b2CDC00503133090fc5ccCB027C0a636a543"),
             decimals=8,
         )
     )

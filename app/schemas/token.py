@@ -3,6 +3,8 @@
 from dataclasses import dataclass
 from typing import Any
 
+from eth_typing import ChecksumAddress
+
 from .chain import Chain
 
 
@@ -13,7 +15,7 @@ class ERC20Token:
     name: str
     symbol: str
     chain: Chain
-    address: str
+    address: ChecksumAddress
     decimals: int = 18
 
     def __hash__(self) -> int:
