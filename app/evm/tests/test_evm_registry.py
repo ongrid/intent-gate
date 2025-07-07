@@ -10,8 +10,11 @@ from app.schemas.token import ERC20Token
 
 ENVS = {
     "ETH_WS_URL": "wss://eth.example.com",
+    "ETH_SKEEPER": "0x28dD63f87d28db3d2ec784f57Ba5EFBB0aA22Ed3",
     "BASE_WS_URL": "wss://base.example.com",
+    "BASE_SKEEPER": "0x28dD63f87d28db3d2ec784f57Ba5EFBB0aA22Ed3",
     "ARB_WS_URL": "ws://arbitrum.example.com",
+    "ARB_SKEEPER": "0x28dD63f87d28db3d2ec784f57Ba5EFBB0aA22Ed3",
 }
 
 
@@ -115,21 +118,22 @@ def test_from_env_valid_ws_urls(registry_from_inventory: ChainRegistry):
         assert arb_chain.active is True
 
 
-def test_from_env_inactive_when_missing_ws_urls(registry_from_inventory: ChainRegistry):
+def test_from_env_inactive_when_missing_ws_urls():
     """Test chains are inactive when WebSocket URLs are missing."""
+    registry_from_inventory_reinitialized = ChainRegistry.from_chains_inventory()
     PARTIALLY_MISSING_ENVS = ENVS.copy()
     del PARTIALLY_MISSING_ENVS["ETH_WS_URL"]
     with patch.dict(os.environ, PARTIALLY_MISSING_ENVS, clear=True):
-        registry_from_inventory.from_env()
-        eth_chain = registry_from_inventory.get_chain_by_id(1)
+        registry_from_inventory_reinitialized.from_env()
+        eth_chain = registry_from_inventory_reinitialized.get_chain_by_id(1)
         assert eth_chain is not None
         assert eth_chain.ws_rpc_url == ""  # Should be empty if not set
         assert eth_chain.active is False  # Chain should be inactive if no URL set
-        base_chain = registry_from_inventory.get_chain_by_id(8453)
+        base_chain = registry_from_inventory_reinitialized.get_chain_by_id(8453)
         assert base_chain is not None
         assert base_chain.ws_rpc_url == "wss://base.example.com"
         assert base_chain.active is True
-        arb_chain = registry_from_inventory.get_chain_by_id(42161)
+        arb_chain = registry_from_inventory_reinitialized.get_chain_by_id(42161)
         assert arb_chain is not None
         assert arb_chain.ws_rpc_url == "ws://arbitrum.example.com"
 

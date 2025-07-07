@@ -5,6 +5,8 @@
 from dataclasses import dataclass, field
 from typing import List, Optional
 
+from eth_typing import ChecksumAddress
+
 
 @dataclass
 class Chain:
@@ -19,3 +21,4 @@ class Chain:
     active: bool = False
     tokens: List = field(default_factory=list)
     ws_rpc_url: Optional[str] = None
+    skeeper_address: Optional[ChecksumAddress] = None

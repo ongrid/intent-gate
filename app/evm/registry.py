@@ -14,6 +14,7 @@ from ..schemas.token import ERC20Token
 
 CHAINS_INVENTORY_MODULE = "app.evm.chains"
 CHAIN_WS_URL_ENV_POSTFIX = "_WS_URL"
+SKEEPER_ENV_POSTFIX = "_SKEEPER"
 
 log = logging.getLogger(__name__)
 
@@ -92,12 +93,16 @@ class ChainRegistry:
         ), "ChainRegistry must be initialized with chains before calling from_env()"
         log.debug("Enriching ChainRegistry with environment variables")
         for chain in self.chains:
+            chain.ws_rpc_url = ""  # Default to empty string
+            chain.skeeper_address = None
             for chain_short_name in chain.short_names:
-                env_var = f"{chain_short_name.upper()}{CHAIN_WS_URL_ENV_POSTFIX}"
-                ws_rpc_url = os.getenv(env_var)
+                ws_rpc_env_var = f"{chain_short_name.upper()}{CHAIN_WS_URL_ENV_POSTFIX}"
+                ws_rpc_url = os.getenv(ws_rpc_env_var)
                 if ws_rpc_url:
                     if not self._is_valid_ws_url(ws_rpc_url):
-                        raise ValueError(f"Invalid WebSocket URL in {env_var}: {ws_rpc_url}")
+                        raise ValueError(
+                            f"Invalid WebSocket URL in {ws_rpc_env_var}: {ws_rpc_url}"
+                        )
                     log.info(
                         "Setting RPC URL for chain %s(%s): %s",
                         chain.short_names[0],
@@ -105,14 +110,31 @@ class ChainRegistry:
                         ws_rpc_url,
                     )
                     chain.ws_rpc_url = ws_rpc_url
-                    chain.active = True
-                    break
+
+                skeeper_env_var = f"{chain_short_name.upper()}{SKEEPER_ENV_POSTFIX}"
+                skeeper_address = os.getenv(skeeper_env_var)
+                if skeeper_address:
+                    if not Web3.is_checksum_address(skeeper_address):
+                        raise ValueError(
+                            f"Invalid Skeeper address in {skeeper_env_var}: {skeeper_address}"
+                        )
+                    log.info(
+                        "Setting Skeeper address for chain %s(%s): %s",
+                        chain.short_names[0],
+                        chain.id,
+                        skeeper_address,
+                    )
+                    chain.skeeper_address = Web3.to_checksum_address(skeeper_address)
+
+            if chain.ws_rpc_url and chain.skeeper_address:
+                chain.active = True
             else:
-                log.warning(
-                    "Chain %s (%s) does not have a valid RPC URL set", chain.name, chain.id
-                )
-                chain.ws_rpc_url = ""
                 chain.active = False
+                log.warning(
+                    "Chain %s(%s) is inactive due to missing ws_rpc_url or skeeper_address",
+                    chain.short_names[0],
+                    chain.id,
+                )
 
     def get_chain_by_id(self, chain_id: int) -> Optional[Chain]:
         """Get a chain instance by its name or ID."""
