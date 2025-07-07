@@ -26,6 +26,7 @@ def mock_chain() -> Chain:
         liquorice_settlement_address=to_checksum_address(
             "0xAcA684A3F64e0eae4812B734E3f8f205D3EEd167"
         ),
+        skeeper_address=to_checksum_address("0x28dD63f87d28db3d2ec784f57Ba5EFBB0aA22Ed3"),
         tokens=[],
         active=True,
     )
@@ -116,7 +117,12 @@ def mock_chain_service(mock_chain: Chain) -> ChainService:
     registry.chain_by_id[mock_chain.id] = mock_chain
 
     manager = ChainServiceMgr(registry, MarketState())
-    return ChainService(manager, mock_chain)
+    chain_service = ChainService(manager, mock_chain)
+    chain_service.erc20_service = AsyncMock()  # Mock ERC20Service
+    chain_service.erc20_service.start = AsyncMock()
+    chain_service.erc20_service.stop = AsyncMock()
+    chain_service.erc20_service.request_immediate_read = Mock()
+    return chain_service
 
 
 @pytest.mark.asyncio
@@ -135,7 +141,7 @@ async def test_build_subscription_filters(mock_chain_service: ChainService):
         mock_chain_service.chain
     )
 
-    assert len(filters) == 12  # Two filters per token (to/from) signer and settlement address
+    assert len(filters) == 6  # One filter per token (to/from) skeeper address
     assert all(isinstance(f, LogsSubscription) for f in filters)
 
 

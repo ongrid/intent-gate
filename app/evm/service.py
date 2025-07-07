@@ -12,7 +12,7 @@ from web3.utils.subscriptions import (
     LogsSubscriptionContext,
 )
 
-from app.evm.const import ERC20_TRANSFER_TOPIC, ERC20_ZERO_ADDRESS
+from app.evm.const import ERC20_TRANSFER_TOPIC
 from app.evm.erc20_service import ERC20Service
 from app.evm.helpers import encode_address
 from app.evm.registry import ChainRegistry
@@ -71,6 +71,7 @@ class ChainService:
     task: Optional[asyncio.Task] = None
     conn_closed = asyncio.Event
     watchdog_task = Optional[asyncio.Task]
+    erc20_service: Optional[ERC20Service]
 
     def __init__(self, mgr: ChainServiceMgr, chain: Chain):
         self.mgr = mgr
@@ -82,7 +83,7 @@ class ChainService:
         self.is_running: bool = False
         self.task: Optional[asyncio.Task] = None
         self.subscription_handler_task: Optional[asyncio.Task] = None
-        self.erc20_service: ERC20Service
+        self.erc20_service = None
 
     async def log_handler(
         self,
@@ -90,14 +91,18 @@ class ChainService:
     ) -> None:
         """Handle logs from the subscription manager to catch potential balance changes."""
         assert self.chain is not None, "Chain must be set before handling logs"
+        assert (
+            self.erc20_service is not None
+        ), "ERC20Service must be initialized before handling logs"
         log_receipt = handler_context.result
         log.debug("Log receipt: %s chain: %s", log_receipt, self.chain.name)
+        self.erc20_service.request_immediate_read()
 
     def build_tokens_subscription_filter_with_handlers(self, chain) -> List[LogsSubscription]:
         """Build a filter for ERC20 token transfers."""
         result = []
         for token in chain.tokens:
-            for address_to_monitor in ERC20_ZERO_ADDRESS, chain.liquorice_settlement_address:
+            for address_to_monitor in [chain.skeeper_address]:
                 # monitor transfers TO the address of interest
                 result.append(
                     LogsSubscription(

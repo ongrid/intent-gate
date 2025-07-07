@@ -33,6 +33,8 @@ class ERC20Service:
     w3: AsyncWeb3
     task: Optional[asyncio.Task]
     is_running: bool
+    markets: MarketState
+    _immediate_read_requested: asyncio.Event
 
     def __init__(self, chain: Chain, w3: AsyncWeb3, markets: MarketState) -> None:
         assert isinstance(chain, Chain), "Chain must be an instance of Chain"
@@ -44,6 +46,15 @@ class ERC20Service:
         self.markets = markets
         self.is_running = False
         self.task: Optional[asyncio.Task] = None
+        self._immediate_read_requested = asyncio.Event()
+
+    def request_immediate_read(self) -> None:
+        """Called by ChainService when a token transfer event is received.
+
+        Call signals that the ERC-20 service should immediately rescan
+        token balances rather than waiting for the next periodic update cycle."""
+        log.info("Immediate token balances update requested for %s", self.chain.name)
+        self._immediate_read_requested.set()
 
     async def get_token_raw_balance(
         self, token_address: ChecksumAddress, account_address: ChecksumAddress
@@ -87,7 +98,17 @@ class ERC20Service:
                 update_duration = asyncio.get_event_loop().time() - start_time
                 log.debug("Balance update completed in %.2f seconds", update_duration)
                 sleep_time = max(ERC20_MIN_UPDATE_DELAY, ERC20_UPDATE_INTERVAL - update_duration)
-                await asyncio.sleep(sleep_time)
+
+                # Wait for immediate update event or timeout for next periodic update
+                try:
+                    await asyncio.wait_for(
+                        self._immediate_read_requested.wait(), timeout=sleep_time
+                    )
+                    self._immediate_read_requested.clear()
+                    log.debug("Immediate update triggered for %s", self.chain.name)
+                except asyncio.TimeoutError:
+                    # Normal timeout, continue with periodic update
+                    pass
             except asyncio.CancelledError:
                 log.info("Balance update loop cancelled for %s", self.chain.name)
                 self.is_running = False
