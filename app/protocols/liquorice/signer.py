@@ -12,7 +12,7 @@ from web3 import Web3
 
 from app.evm.registry import ChainRegistry
 
-from .schemas import RFQQuoteMessage
+from .schemas import RFQMessage, RFQQuoteMessage
 
 EIP712_DOMAIN_TYPEHASH = keccak(
     text="EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)"
@@ -120,9 +120,11 @@ class Web3Signer:
         self.account = Web3().eth.account.from_key(priv_key)
         self.chain_registry = chain_registry
 
-    def sign_quote_levels(self, quote: RFQQuoteMessage) -> Optional[RFQQuoteMessage]:
+    def sign_quote_levels(
+        self, rfq: RFQMessage, quote: RFQQuoteMessage
+    ) -> Optional[RFQQuoteMessage]:
         """Sign RFQ quote levels with the account's private key."""
-        chain_id = quote._rfq.chainId
+        chain_id = rfq.chainId
         if chain_id not in self.chain_registry.chain_by_id:
             log.error("Chain ID %s not found in chain registry", chain_id)
             return None
@@ -137,18 +139,18 @@ class Web3Signer:
             signable_lvl = SignableRfqQuoteLevel(
                 base_token=quote_level.baseToken,
                 base_token_amount=quote_level.baseTokenAmount,
-                chain_id=quote._rfq.chainId,
-                effective_trader=quote._rfq.effectiveTrader,
+                chain_id=rfq.chainId,
+                effective_trader=rfq.effectiveTrader,
                 quote_expiry=quote_level.expiry,
                 min_quote_token_amount=quote_level.minQuoteTokenAmount,
-                nonce=quote._rfq.nonce,
+                nonce=rfq.nonce,
                 quote_token=quote_level.quoteToken,
                 quote_token_amount=quote_level.quoteTokenAmount,
                 # Both recipient and EIP-1271 verifier are same if you use SKeeper contract address
                 recipient=chain.skeeper_address,
                 rfq_id=quote.rfqId,
                 market=quote_level.settlementContract,
-                trader=quote._rfq.trader,
+                trader=rfq.trader,
                 settlement_contract=chain.liquorice_settlement_address,
             )
             quote_level.signature = self.account.unsafe_sign_hash(signable_lvl.hash).signature

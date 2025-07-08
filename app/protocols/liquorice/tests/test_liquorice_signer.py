@@ -21,7 +21,6 @@ rfq_dict = json.loads((Path(__file__).parent / "data" / "liquorice_rfq.json").re
 quote_dict = json.loads((Path(__file__).parent / "data" / "liquorice_quote_lite.json").read_text())
 rfq_msg = RFQMessage(**rfq_dict["message"])
 quote_msg = RFQQuoteMessage(**quote_dict["message"])
-quote_msg._rfq = rfq_msg
 
 
 # This is a private key derived from from well-known test mnemonic at index #0:
@@ -53,7 +52,7 @@ def test_order_digest():
 
 def test_liquorice_signer(signer):
     """Test the Liquorice signer with a signable level."""
-    signed_quote = signer.sign_quote_levels(quote_msg)
+    signed_quote = signer.sign_quote_levels(rfq_msg, quote_msg)
     # Check if the recipient and signer addresses are set correctly
     assert signed_quote.levels[0].recipient == signer.account.address
     assert signed_quote.levels[0].signer == signer.account.address

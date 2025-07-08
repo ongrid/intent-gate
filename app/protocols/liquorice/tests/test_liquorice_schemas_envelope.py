@@ -46,9 +46,7 @@ def test_envelope_init_infer_quote_type():
         )
     )
     quote_lite_msg = RFQQuoteMessage(
-        rfqId=UUID("2aca5f16-defd-4f0c-9d4e-f219d69cbd7b"),
-        levels=levels,
-        _rfq=RFQMessage(**EXAMPLE_RFQ_MESSAGE_DICT["message"]),
+        rfqId=UUID("2aca5f16-defd-4f0c-9d4e-f219d69cbd7b"), levels=levels
     )
     quote_envelope = LiquoriceEnvelope(message=quote_lite_msg)
     assert quote_envelope.messageType == "rfqQuote"
@@ -91,7 +89,6 @@ def test_envelope_init_raise_when_inconsistent_types():
             message=RFQQuoteMessage(
                 rfqId=UUID("2aca5f16-defd-4f0c-9d4e-f219d69cbd7b"),
                 levels=[],
-                _rfq=RFQMessage(**EXAMPLE_RFQ_MESSAGE_DICT["message"]),
             ),
             messageType=MessageType.RFQ,
         )
@@ -106,7 +103,6 @@ def test_envelope_init_infer_raise_when_unknown_type():
             message=RFQQuoteMessage(
                 rfqId=UUID("2aca5f16-defd-4f0c-9d4e-f219d69cbd7b"),
                 levels=[],
-                _rfq=RFQMessage(**EXAMPLE_RFQ_MESSAGE_DICT["message"]),
             ),
             messageType=MessageType.UNKNOWN,
         )

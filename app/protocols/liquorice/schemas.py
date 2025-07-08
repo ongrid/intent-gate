@@ -270,9 +270,6 @@ class RFQQuoteMessage(BaseModel):
     model_config = ConfigDict(frozen=False)
     rfqId: UUID
     levels: List[QuoteLevelLite]  # extend this if other level types are added
-    _rfq: Annotated[
-        RFQMessage, Field(exclude=True, default=None, description="Request RFQ message")
-    ]
 
 
 T = TypeVar("T", RFQMessage, RFQQuoteMessage, EmptyMessage)

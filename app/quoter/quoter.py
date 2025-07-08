@@ -93,10 +93,8 @@ class LiquoriceQuoter:
                         recipient=to_checksum_address(ZERO_ADDRESS),  # Placeholder
                         signature=HexBytes("00" * 65),  # Placeholder
                     )
-                    non_signed_quote = RFQQuoteMessage(
-                        rfqId=rfq.rfqId, levels=[quote_lvl], _rfq=rfq
-                    )
-                    signed_quote = self.signer.sign_quote_levels(non_signed_quote)
+                    non_signed_quote = RFQQuoteMessage(rfqId=rfq.rfqId, levels=[quote_lvl])
+                    signed_quote = self.signer.sign_quote_levels(rfq, non_signed_quote)
                     if not signed_quote:
                         log.error("Failed to sign quote for RFQ: %s", rfq.rfqId)
                         continue
