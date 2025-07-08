@@ -6,6 +6,7 @@ from unittest.mock import AsyncMock, patch
 from uuid import UUID
 
 import pytest
+from eth_typing import HexStr
 
 from app.config.maker import MakerConfig
 from app.protocols.liquorice.client import LiquoriceClient
@@ -70,7 +71,7 @@ expected_quote_raw_msg = LiquoriceEnvelope(
 async def test_liquorice_client_run_relays_messages():
     """Test the LiquoriceClient's run method relays messages between respective queues and websocket."""
     client = LiquoriceClient(
-        MakerConfig(maker="maker_name", authorization="auth", signer_priv_key="0x00")
+        MakerConfig(maker="maker_name", authorization="auth", signer_priv_key=HexStr("0x00"))
     )
 
     # Mock WebSocket connection

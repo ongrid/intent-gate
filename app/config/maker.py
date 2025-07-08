@@ -4,6 +4,7 @@ import logging
 import os
 import uuid
 
+from eth_typing import HexStr
 from pydantic.dataclasses import dataclass
 from web3 import Web3
 
@@ -51,8 +52,10 @@ class MakerConfig:
             raise ValueError(f"MAKER_SESS_AUTH must be a valid UUID, got: {e}") from e
         log.debug("Using sess authorization: %s", authorization)
 
-        signer_priv_key = os.getenv("SIGNER_PRIV_KEY")
-        if not signer_priv_key:
+        signer_priv_key_str = os.getenv("SIGNER_PRIV_KEY")
+        if signer_priv_key_str:
+            signer_priv_key = HexStr(signer_priv_key_str)
+        else:
             raise ValueError("SIGNER_PRIV_KEY env var is not set")
         try:
             account = Web3().eth.account.from_key(signer_priv_key)
