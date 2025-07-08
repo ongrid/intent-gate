@@ -261,6 +261,11 @@ class QuoteLevelLite(BaseModel):
         """Serialize HexBytes signature to 0x-prefixed hex string."""
         return "0x" + v.hex()
 
+    @field_serializer("baseTokenAmount", "quoteTokenAmount", "minQuoteTokenAmount")
+    def serialize_token_amounts(self, v: int, _info) -> str:
+        """Serialize token amounts as strings for JSON compatibility."""
+        return str(v)
+
 
 class RFQQuoteMessage(BaseModel):
     """Market makers can provide multiple quote levels with different amounts,
