@@ -2,11 +2,17 @@
 
 import asyncio
 from contextlib import suppress
+from decimal import Decimal
 from logging import getLogger
 from typing import AsyncIterator
 
+from hexbytes import HexBytes
+from web3.main import to_checksum_address
+
+from app.evm.const import ERC20_ZERO_ADDRESS as ZERO_ADDRESS
 from app.markets.markets import MarketState
-from app.protocols.liquorice.schemas import RFQMessage, RFQQuoteMessage
+from app.protocols.liquorice.schemas import QuoteLevelLite, RFQMessage, RFQQuoteMessage
+from app.protocols.liquorice.signer import Web3Signer
 
 log = getLogger(__name__)
 
@@ -18,16 +24,19 @@ class LiquoriceQuoter:
     in_rfqs: asyncio.Queue[RFQMessage]
     out_quotes: asyncio.Queue[RFQQuoteMessage]
     markets: MarketState
+    signer: Web3Signer
 
     def __init__(
         self,
         in_rfqs: asyncio.Queue[RFQMessage],
         out_quotes: asyncio.Queue[RFQQuoteMessage],
         markets: MarketState,
+        signer: Web3Signer,
     ) -> None:
         self.in_rfqs = in_rfqs
         self.out_quotes = out_quotes
         self.markets = markets
+        self.signer = signer
 
     async def rfq_stream(self) -> AsyncIterator[RFQMessage]:
         """Stream RFQs from the input queue."""
@@ -44,6 +53,55 @@ class LiquoriceQuoter:
             async for rfq in self.rfq_stream():
                 try:
                     log.debug("Processing RFQ: %s", rfq)
-                    # Process RFQ here
+
+                    base_token = self.markets.get_token(rfq.baseToken, rfq.chainId)
+                    if not base_token:
+                        log.info(
+                            "BaseToken %s unsupported. Ignoring RFQ: %s", rfq.baseToken, rfq.rfqId
+                        )
+                        continue
+                    quote_token = self.markets.get_token(rfq.quoteToken, rfq.chainId)
+                    if not quote_token:
+                        log.info(
+                            "QuoteToken %s unsupported. Ignoring RFQ: %s",
+                            rfq.quoteToken,
+                            rfq.rfqId,
+                        )
+                        continue
+                    path = self.markets.shortest_path(base_token, quote_token)
+                    assert path, "No path found for RFQ"
+                    assert isinstance(rfq.baseTokenAmount, int)
+                    assert rfq.baseTokenAmount > 0
+                    receive_base_token_amount = base_token.raw_to_decimal(rfq.baseTokenAmount)
+                    send_quote_token_amount = min(
+                        receive_base_token_amount * Decimal("1.01"), quote_token.balance
+                    )
+                    send_quote_token_raw_amount = quote_token.decimal_to_raw(
+                        send_quote_token_amount
+                    )
+                    quote_lvl = QuoteLevelLite(
+                        baseToken=base_token.address,
+                        quoteToken=quote_token.address,
+                        baseTokenAmount=int(rfq.baseTokenAmount),
+                        quoteTokenAmount=send_quote_token_raw_amount,
+                        expiry=rfq.expiry + 30,
+                        settlementContract=to_checksum_address(ZERO_ADDRESS),
+                        minQuoteTokenAmount=0,
+                        signer=to_checksum_address(
+                            ZERO_ADDRESS
+                        ),  # Placeholder, will be set later by Web3 Signer
+                        recipient=to_checksum_address(ZERO_ADDRESS),  # Placeholder
+                        signature=HexBytes("00" * 65),  # Placeholder
+                    )
+                    non_signed_quote = RFQQuoteMessage(
+                        rfqId=rfq.rfqId, levels=[quote_lvl], _rfq=rfq
+                    )
+                    signed_quote = self.signer.sign_quote_levels(non_signed_quote)
+                    if not signed_quote:
+                        log.error("Failed to sign quote for RFQ: %s", rfq.rfqId)
+                        continue
+                    log.info("Sending quote for RFQ %s: %s", rfq.rfqId, signed_quote)
+                    await self.out_quotes.put(signed_quote)
+
                 except Exception as e:  # pylint: disable=broad-exception-caught
                     log.error("Failed to process RFQ: %s", e)

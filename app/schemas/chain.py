@@ -13,7 +13,7 @@ class Chain:
     """Represents a blockchain network with its properties and configuration."""
 
     id: int
-    liquorice_settlement_address: str
+    liquorice_settlement_address: ChecksumAddress
     name: str = "unknown"
     short_names: List[str] = field(default_factory=list)
     gas_token: str = "ETH"

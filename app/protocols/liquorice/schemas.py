@@ -240,8 +240,9 @@ class QuoteLevelLite(BaseModel):
         Field(description="Signature for this quote level"),
     ]
     eip1271Verifier: Annotated[
-        ChecksumAddress, Field(description="Address of the EIP-1271 verifier contract (SKeeper typically)")
-    ]
+        Optional[ChecksumAddress],
+        Field(description="Address of the EIP-1271 verifier contract (SKeeper typically)"),
+    ] = None
 
     @field_validator("signature", mode="before")
     @classmethod

@@ -5,7 +5,7 @@ from uuid import UUID
 
 from eth_abi import encode
 from eth_account.signers.local import LocalAccount
-from eth_typing import Hash32, HexStr
+from eth_typing import ChecksumAddress, Hash32, HexStr
 from eth_utils import keccak, to_checksum_address
 from hexbytes import HexBytes
 from web3 import Web3
@@ -31,20 +31,20 @@ log = logging.getLogger(__name__)
 class SignableRfqQuoteLevel:
     """EIP-712 signable order structure combining RFQ and quote level data."""
 
-    base_token: str
+    base_token: ChecksumAddress
     base_token_amount: int
     chain_id: int
-    settlement_contract: str
-    effective_trader: str
+    settlement_contract: ChecksumAddress
+    effective_trader: ChecksumAddress
     quote_expiry: int
     min_quote_token_amount: int
     nonce: HexBytes
-    quote_token: str
+    quote_token: ChecksumAddress
     quote_token_amount: int
-    recipient: str
+    recipient: ChecksumAddress
     rfq_id: UUID
-    market: str
-    trader: str
+    market: ChecksumAddress
+    trader: ChecksumAddress
 
     @property
     def _domain_separator(self) -> Hash32:
@@ -127,6 +127,7 @@ class Web3Signer:
             log.error("Chain ID %s not found in chain registry", chain_id)
             return None
         chain = self.chain_registry.chain_by_id[chain_id]
+        assert chain.skeeper_address
         if not chain.active:
             log.error("Chain %s is not active", chain.name)
             return None
@@ -145,12 +146,13 @@ class Web3Signer:
                 quote_token_amount=quote_level.quoteTokenAmount,
                 # Both recipient and EIP-1271 verifier are same if you use SKeeper contract address
                 recipient=chain.skeeper_address,
-                eip1271Verifier=chain.skeeper_address,
                 rfq_id=quote.rfqId,
                 market=quote_level.settlementContract,
                 trader=quote._rfq.trader,
                 settlement_contract=chain.liquorice_settlement_address,
             )
             quote_level.signature = self.account.unsafe_sign_hash(signable_lvl.hash).signature
+            # Both recipient and EIP-1271 verifier are same if you use SKeeper contract address
+            quote_level.eip1271Verifier = chain.skeeper_address
 
         return quote

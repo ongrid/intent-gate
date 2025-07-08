@@ -5,7 +5,9 @@ from unittest.mock import Mock
 import pytest
 from eth_typing import HexStr
 from hexbytes import HexBytes
+from web3.main import to_checksum_address
 
+from app.protocols.liquorice.const import LIQUORICE_SETTLEMENT_ADDRESS
 from app.protocols.liquorice.schemas import RFQMessage, RFQQuoteMessage
 from app.protocols.liquorice.signer import SignableRfqQuoteLevel, Web3Signer
 
@@ -27,6 +29,7 @@ quote_msg._rfq = rfq_msg
 # Account: 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266
 # NEVER EVER use this private key in production!
 PRIV_KEY = HexStr("ac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80")
+ACCOUNT_ADDRESS = to_checksum_address("0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266")
 
 
 @pytest.fixture
@@ -34,7 +37,9 @@ def signer():
     chain_registry = Mock()
     chain_registry.chain_by_id = {
         42161: Mock(
-            liquorice_settlement_address="0xAcA684A3F64e0eae4812B734E3f8f205D3EEd167", active=True
+            liquorice_settlement_address=LIQUORICE_SETTLEMENT_ADDRESS,
+            active=True,
+            skeeper_address=ACCOUNT_ADDRESS,
         ),
     }
     return Web3Signer(chain_registry, PRIV_KEY)

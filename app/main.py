@@ -17,6 +17,7 @@ from app.evm.service import ChainServiceMgr
 from app.log.log import get_uvicorn_log_config, setup_logging
 from app.markets.markets import MarketState
 from app.protocols.liquorice.client import LiquoriceClient
+from app.protocols.liquorice.signer import Web3Signer
 from app.quoter.quoter import LiquoriceQuoter
 
 setup_logging()
@@ -34,6 +35,9 @@ async def lifespan(_app: FastAPI):
     log.info("Initializing intent gateway configuration...")
     cfg_maker = MakerConfig.from_env()
     log.info("Maker configuration loaded: %s", cfg_maker)
+    log.info("Initializing Liquorice Signer...")
+    liquorice_signer = Web3Signer(chain_rg, cfg_maker.signer_priv_key)
+    log.info("Liquorice Signer initialized with account: %s", liquorice_signer.account.address)
     markets = MarketState()
     cs_mgr = ChainServiceMgr(chain_rg, markets)
     log.info("Starting intent gateway...")
@@ -44,7 +48,7 @@ async def lifespan(_app: FastAPI):
         liq_client.run()
     )  # long-lived coroutine for Liquorice client
     log.info("Starting Quoter service...")
-    quoter = LiquoriceQuoter(liq_client.out_rfqs, liq_client.in_quotes, markets)
+    quoter = LiquoriceQuoter(liq_client.out_rfqs, liq_client.in_quotes, markets, liquorice_signer)
     quoter_task = asyncio.create_task(quoter.run())  # long-lived coroutine for Quoter
     log.info("Intent gateway started successfully")
     try:

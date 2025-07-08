@@ -8,6 +8,7 @@ import pytest
 from app.evm.registry import ChainRegistry
 from app.evm.service import ChainServiceMgr
 from app.markets.markets import MarketState
+from app.protocols.liquorice.const import LIQUORICE_SETTLEMENT_ADDRESS
 from app.schemas.chain import Chain
 
 
@@ -21,7 +22,7 @@ def mock_chains() -> List[Chain]:
             short_names=["chain_123"],
             gas_token="GAS123",
             ws_rpc_url="wss://test.chain123.com",
-            liquorice_settlement_address="0xAcA684A3F64e0eae4812B734E3f8f205D3EEd167",
+            liquorice_settlement_address=LIQUORICE_SETTLEMENT_ADDRESS,
             active=True,
         ),
         Chain(
@@ -30,7 +31,7 @@ def mock_chains() -> List[Chain]:
             short_names=["chain_124"],
             gas_token="GAS124",
             ws_rpc_url="wss://test.chain124.com",
-            liquorice_settlement_address="0xAcA684A3F64e0eae4812B734E3f8f205D3EEd167",
+            liquorice_settlement_address=LIQUORICE_SETTLEMENT_ADDRESS,
             active=True,
         ),
         Chain(
@@ -39,7 +40,7 @@ def mock_chains() -> List[Chain]:
             short_names=["chain_125"],
             gas_token="GAS125",
             ws_rpc_url="wss://test.chain125.com",
-            liquorice_settlement_address="0xAcA684A3F64e0eae4812B734E3f8f205D3EEd167",
+            liquorice_settlement_address=LIQUORICE_SETTLEMENT_ADDRESS,
             active=False,  # Inactive chain to check handling of non-active chains in Service Mgr
         ),
     ]

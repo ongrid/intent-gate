@@ -1,4 +1,4 @@
-from typing import Generator
+from typing import Generator, List, Optional
 
 import networkx as nx
 
@@ -32,3 +32,25 @@ class MarketState:  # pylint: disable=too-few-public-methods
         for node in self.graph.nodes():
             if isinstance(node, ERC20Token) and node.chain.id == chain_id:
                 yield node
+
+    def get_token(self, address: str, chain_id: int) -> Optional[ERC20Token]:
+        """Get a token by its chain_id and address."""
+        for node in self.graph.nodes():
+            if (
+                isinstance(node, ERC20Token)
+                and node.address.lower() == address.lower()
+                and chain_id == node.chain.id
+            ):
+                return node
+        return None
+
+    def shortest_path(self, source: ERC20Token, target: ERC20Token) -> Optional[List[ERC20Token]]:
+        """Find the shortest path between two tokens."""
+        try:
+            path = nx.shortest_path(self.graph, source=source, target=target, weight="weight")
+            if isinstance(path, list) and all(isinstance(node, ERC20Token) for node in path):
+                # Ensure the path consists of ERC20Token instances
+                return path
+            return None
+        except (nx.NetworkXNoPath, nx.NodeNotFound):
+            return None

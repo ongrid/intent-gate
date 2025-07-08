@@ -26,7 +26,7 @@ class MakerConfig:
 
     maker: str
     authorization: str
-    signer_priv_key: str
+    signer_priv_key: HexStr
 
     @classmethod
     def from_env(cls) -> "MakerConfig":
