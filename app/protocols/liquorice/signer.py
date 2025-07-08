@@ -143,7 +143,9 @@ class Web3Signer:
                 nonce=quote._rfq.nonce,
                 quote_token=quote_level.quoteToken,
                 quote_token_amount=quote_level.quoteTokenAmount,
-                recipient=quote_level.recipient,
+                # Both recipient and EIP-1271 verifier are same if you use SKeeper contract address
+                recipient=chain.skeeper_address,
+                eip1271Verifier=chain.skeeper_address,
                 rfq_id=quote.rfqId,
                 market=quote_level.settlementContract,
                 trader=quote._rfq.trader,
