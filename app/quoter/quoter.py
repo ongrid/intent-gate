@@ -86,7 +86,7 @@ class LiquoriceQuoter:
                         quoteTokenAmount=send_quote_token_raw_amount,
                         expiry=rfq.expiry + 30,
                         settlementContract=to_checksum_address(ZERO_ADDRESS),
-                        minQuoteTokenAmount=0,
+                        minQuoteTokenAmount=1,
                         signer=to_checksum_address(
                             ZERO_ADDRESS
                         ),  # Placeholder, will be set later by Web3 Signer
