@@ -59,7 +59,7 @@ class LiquoriceClient:
             assert isinstance(quote_msg, RFQQuoteMessage), "Expected RFQQuoteMessage"
             raw_msg = LiquoriceEnvelope(
                 message=quote_msg, messageType=MessageType.RFQ_QUOTE
-            ).model_dump_json()
+            ).model_dump_json(exclude_none=True)
             await ws.send(raw_msg)
             log.debug("Sent: %s", raw_msg)
 

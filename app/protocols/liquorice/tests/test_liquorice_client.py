@@ -64,7 +64,7 @@ quote_lite_text_msg_only_text = json.dumps(json.loads(quote_text)["message"])
 quote_lite_msg_dto = RFQQuoteMessage.model_validate_json(quote_lite_text_msg_only_text)
 expected_quote_raw_msg = LiquoriceEnvelope(
     message=quote_lite_msg_dto, messageType=MessageType.RFQ_QUOTE
-).model_dump_json()
+).model_dump_json(exclude_none=True)
 
 
 @pytest.mark.asyncio
