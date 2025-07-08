@@ -74,11 +74,18 @@ class LiquoriceQuoter:
                     assert rfq.baseTokenAmount > 0
                     receive_base_token_amount = base_token.raw_to_decimal(rfq.baseTokenAmount)
                     send_quote_token_amount = min(
-                        receive_base_token_amount * Decimal("1.01"), quote_token.balance
+                        receive_base_token_amount * Decimal("1.05"), quote_token.balance
                     )
                     send_quote_token_raw_amount = quote_token.decimal_to_raw(
                         send_quote_token_amount
                     )
+                    if send_quote_token_amount == 0:
+                        log.info(
+                            "No quote tokens available for RFQ %s: %s",
+                            rfq.rfqId,
+                            rfq.quoteToken,
+                        )
+                        continue
                     quote_lvl = QuoteLevelLite(
                         baseToken=base_token.address,
                         quoteToken=quote_token.address,
