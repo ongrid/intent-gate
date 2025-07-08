@@ -5,6 +5,6 @@ COPY . ./
 ENV PATH="/root/.local/bin:$PATH"
 ENV PYTHONUNBUFFERED=1
 ENV PYTHONPATH="/app"
-RUN poetry install --no-dev
+RUN poetry install --without=dev
 EXPOSE 8080
 CMD poetry run python /app/app/main.py
