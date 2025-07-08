@@ -129,10 +129,11 @@ class Web3Signer:
             log.error("Chain ID %s not found in chain registry", chain_id)
             return None
         chain = self.chain_registry.chain_by_id[chain_id]
-        assert chain.skeeper_address
         if not chain.active:
             log.error("Chain %s is not active", chain.name)
             return None
+        assert chain.skeeper_address
+        assert chain.liquorice_settlement_address
         for quote_level in quote.levels:
             quote_level.recipient = self.account.address
             quote_level.signer = self.account.address
@@ -156,5 +157,8 @@ class Web3Signer:
             quote_level.signature = self.account.unsafe_sign_hash(signable_lvl.hash).signature
             # Both recipient and EIP-1271 verifier are same if you use SKeeper contract address
             quote_level.eip1271Verifier = chain.skeeper_address
+            quote_level.recipient = chain.skeeper_address
+            quote_level.signer = self.account.address
+            quote_level.settlementContract = chain.liquorice_settlement_address
 
         return quote
