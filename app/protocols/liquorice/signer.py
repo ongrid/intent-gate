@@ -1,4 +1,6 @@
+import logging
 from dataclasses import dataclass
+from typing import Optional
 from uuid import UUID
 
 from eth_abi import encode
@@ -7,6 +9,8 @@ from eth_typing import Hash32, HexStr
 from eth_utils import keccak, to_checksum_address
 from hexbytes import HexBytes
 from web3 import Web3
+
+from app.evm.registry import ChainRegistry
 
 from .schemas import RFQQuoteMessage
 
@@ -19,7 +23,8 @@ SINGLE_ORDER_TYPEHASH = keccak(
 DOMAIN_NAME = keccak(text="LiquoriceSettlement")
 DOMAIN_VERSION = keccak(text="1")
 EIP191_HEADER = b"\x19\x01"
-LIQUORICE_SETTLEMENT_CONTRACT = "0xAcA684A3F64e0eae4812B734E3f8f205D3EEd167"
+
+log = logging.getLogger(__name__)
 
 
 @dataclass(frozen=False)
@@ -104,10 +109,27 @@ class SignableRfqQuoteLevel:
 
 
 class Web3Signer:
-    def __init__(self, priv_key: HexStr):
-        self.account: LocalAccount = Web3().eth.account.from_key(priv_key)
+    """Singleton signer configured with a private key and chain registry access.
+    Signs RFQ quote levels by applying chain-specific attributes and generating EIP-712 signatures.
+    Validates chain existence and active status before signing quote levels."""
 
-    def sign_quote_levels(self, quote: RFQQuoteMessage) -> RFQQuoteMessage:
+    account: LocalAccount
+    chain_registry: ChainRegistry
+
+    def __init__(self, chain_registry: ChainRegistry, priv_key: HexStr):
+        self.account = Web3().eth.account.from_key(priv_key)
+        self.chain_registry = chain_registry
+
+    def sign_quote_levels(self, quote: RFQQuoteMessage) -> Optional[RFQQuoteMessage]:
+        """Sign RFQ quote levels with the account's private key."""
+        chain_id = quote._rfq.chainId
+        if chain_id not in self.chain_registry.chain_by_id:
+            log.error("Chain ID %s not found in chain registry", chain_id)
+            return None
+        chain = self.chain_registry.chain_by_id[chain_id]
+        if not chain.active:
+            log.error("Chain %s is not active", chain.name)
+            return None
         for quote_level in quote.levels:
             quote_level.recipient = self.account.address
             quote_level.signer = self.account.address
@@ -125,7 +147,7 @@ class Web3Signer:
                 rfq_id=quote.rfqId,
                 market=quote_level.settlementContract,
                 trader=quote._rfq.trader,
-                settlement_contract=LIQUORICE_SETTLEMENT_CONTRACT,
+                settlement_contract=chain.liquorice_settlement_address,
             )
             quote_level.signature = self.account.unsafe_sign_hash(signable_lvl.hash).signature
 

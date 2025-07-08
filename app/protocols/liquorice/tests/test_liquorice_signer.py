@@ -1,5 +1,6 @@
 import json
 from pathlib import Path
+from unittest.mock import Mock
 
 import pytest
 from eth_typing import HexStr
@@ -30,7 +31,13 @@ PRIV_KEY = HexStr("ac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2f
 
 @pytest.fixture
 def signer():
-    return Web3Signer(PRIV_KEY)
+    chain_registry = Mock()
+    chain_registry.chain_by_id = {
+        42161: Mock(
+            liquorice_settlement_address="0xAcA684A3F64e0eae4812B734E3f8f205D3EEd167", active=True
+        ),
+    }
+    return Web3Signer(chain_registry, PRIV_KEY)
 
 
 def test_order_digest():
