@@ -33,12 +33,15 @@ class MockWsConnection:
     """
 
     def __init__(
-        self, msgs_to_receive: List[str], msgs_expected_to_be_sent: List[str] = []
+        self, msgs_to_receive: List[str], msgs_expected_to_be_sent: List[str] = [], disconnect_after: int = None
     ) -> None:
         self.sent = []
         self.msgs_expected_to_be_sent = msgs_expected_to_be_sent
+        self.disconnect_after = disconnect_after
+        self.msg_count = 0
         self.msg_all_received = asyncio.Event()
         self.msg_all_sent = asyncio.Event()
+        self.conn_closed = asyncio.Event()
         self._recv = asyncio.Queue()  # Queue for incoming RFQs (to receive from mocked WebSocket)
         for msg in msgs_to_receive:
             self._recv.put_nowait(msg)
@@ -46,7 +49,15 @@ class MockWsConnection:
     def __aiter__(self) -> AsyncIterator[str]:
         async def iter_msgs() -> AsyncIterator[str]:
             while not self._recv.empty():
-                yield await self._recv.get()
+                msg = self._recv.get_nowait()
+                self.msg_count += 1
+                # Disconnect after specified number of messages
+                if self.disconnect_after and self.msg_count >= self.disconnect_after:
+                    self.conn_closed.set()
+                    from websockets.exceptions import ConnectionClosed
+                    raise ConnectionClosed(None, None)
+                
+                yield msg
             self.msg_all_received.set()
 
         return iter_msgs()
@@ -108,3 +119,32 @@ async def test_liquorice_client_run_relays_messages():
         assert client.in_quotes.empty()
         assert len(ws_mock.sent) == 1
         assert ws_mock.sent[0] == expected_quote_raw_msg
+
+@pytest.mark.asyncio
+async def test_client_handles_disconnect():
+    client = LiquoriceClient(
+        MakerConfig(maker="maker_name", authorization="auth", signer_priv_key=HexStr("0x00"))
+    )
+
+    # This connection will disconnect after sending 1 message
+    ws_mock = MockWsConnection(
+        msgs_to_receive=[connected_text, connected_text],
+        disconnect_after=1  # Disconnect after 1 message
+    )
+
+    with patch(
+        "app.protocols.liquorice.client.websockets.connect",
+        return_value=AsyncMock(__aenter__=AsyncMock(return_value=ws_mock)),
+    ):
+        with patch("app.protocols.liquorice.client.asyncio.sleep", new_callable=AsyncMock) as mock_sleep:
+            task = asyncio.create_task(client.run())
+            try:
+                await asyncio.wait_for(ws_mock.conn_closed.wait(), timeout=10)
+                await asyncio.sleep(10)  # Allow some time for the task to process the disconnect
+            finally:
+                task.cancel()
+                try:
+                    await task
+                except asyncio.CancelledError:
+                    pass
+
