@@ -14,6 +14,7 @@ from fastapi import FastAPI
 from app.config.maker import MakerConfig
 from app.evm.registry import ChainRegistry
 from app.evm.service import ChainServiceMgr
+from app.health.router import health_router
 from app.log.log import get_uvicorn_log_config, setup_logging
 from app.markets.markets import MarketState
 from app.protocols.liquorice.client import LiquoriceClient
@@ -73,6 +74,8 @@ app = FastAPI(
     version="0.1.0",
     lifespan=lifespan,
 )
+
+app.include_router(health_router)
 
 if __name__ == "__main__":
     uvicorn.run(
