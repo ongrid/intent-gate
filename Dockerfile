@@ -7,4 +7,6 @@ ENV PYTHONUNBUFFERED=1
 ENV PYTHONPATH="/app"
 RUN poetry install --without=dev
 EXPOSE 8080
+HEALTHCHECK --interval=1m --timeout=10s \
+  CMD curl -s -w ", http_code:%{http_code}\n" http://localhost:8080/health || exit 1
 CMD poetry run python /app/app/main.py
