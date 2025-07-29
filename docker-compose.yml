@@ -3,8 +3,21 @@ services:
   intent-gate:
     build: .
     image: intent-gate:v0.1.0-preview
-    restart: on-failure
+    restart: unless-stopped
     ports:
       - '8080:8080'
     env_file:
-      - .env
+      - .env.dev
+    labels:
+      - "autoheal=true"
+
+  autoheal:
+    image: willfarrell/autoheal:latest
+    restart: unless-stopped
+    environment:
+      - AUTOHEAL_CONTAINER_LABEL=autoheal
+      - AUTOHEAL_INTERVAL=5
+      - AUTOHEAL_START_PERIOD=0
+      - AUTOHEAL_DEFAULT_STOP_TIMEOUT=10
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
