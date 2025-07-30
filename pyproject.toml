@@ -9,6 +9,7 @@ authors = [
 dependencies = [
   "fastapi (>=0.115.12,<0.116.0)",
   "networkx (>=3.5,<4.0)",
+  "requests (>=2.32.4,<3.0.0)",
   "uvicorn (>=0.34.3,<0.35.0)",
   "web3[async] (>=7.12.0,<8.0.0)"
 ]
