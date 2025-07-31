@@ -14,10 +14,10 @@ from fastapi import FastAPI
 from app.config.maker import MakerConfig
 from app.evm.registry import ChainRegistry
 from app.evm.service import ChainServiceMgr
-from app.health.router import health_router
 from app.log.log import get_uvicorn_log_config, setup_logging
 from app.markets.markets import MarketState
-from app.metrics.metrics import metrics_router
+from app.metrics.health import CounterHealthChecker, HealthService
+from app.metrics.metrics import metrics, metrics_router
 from app.protocols.liquorice.client import LiquoriceClient
 from app.protocols.liquorice.signer import Web3Signer
 from app.quoter.quoter import LiquoriceQuoter
@@ -69,6 +69,14 @@ async def lifespan(_app: FastAPI):
             pass
 
 
+health_svc = HealthService()
+health_svc.add_checker(
+    CounterHealthChecker(
+        metrics.rfqs_total, interval=60, label_key="status", label_values=["QUOTE_SENT"]
+    ),
+    name="rfq",
+)
+
 app = FastAPI(
     title="Intent Gateway",
     description="WebSocket gateway for Liquorice protocol",
@@ -76,7 +84,7 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
-app.include_router(health_router)
+app.include_router(health_svc.router)
 app.include_router(metrics_router)
 
 if __name__ == "__main__":
