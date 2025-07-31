@@ -11,6 +11,7 @@ from web3.main import to_checksum_address
 
 from app.evm.const import ERC20_ZERO_ADDRESS as ZERO_ADDRESS
 from app.markets.markets import MarketState
+from app.metrics.metrics import metrics
 from app.protocols.liquorice.schemas import QuoteLevelLite, RFQMessage, RFQQuoteMessage
 from app.protocols.liquorice.signer import Web3Signer
 
@@ -53,12 +54,18 @@ class LiquoriceQuoter:
             async for rfq in self.rfq_stream():
                 try:
                     log.debug("Processing RFQ: %s", rfq)
-
+                    metrics_labels = {
+                        "chain_id": rfq.chainId,
+                        "solver": rfq.solver,
+                        "base_token": rfq.baseToken,
+                        "quote_token": rfq.quoteToken,
+                    }
                     base_token = self.markets.get_token(rfq.baseToken, rfq.chainId)
                     if not base_token:
                         log.info(
                             "BaseToken %s unsupported. Ignoring RFQ: %s", rfq.baseToken, rfq.rfqId
                         )
+                        metrics.rfqs_total.labels(**metrics_labels, status="UNSUPPORTED_BT").inc()
                         continue
                     quote_token = self.markets.get_token(rfq.quoteToken, rfq.chainId)
                     if not quote_token:
@@ -67,6 +74,7 @@ class LiquoriceQuoter:
                             rfq.quoteToken,
                             rfq.rfqId,
                         )
+                        metrics.rfqs_total.labels(**metrics_labels, status="UNSUPPORTED_QT").inc()
                         continue
                     path = self.markets.shortest_path(base_token, quote_token)
                     assert path, "No path found for RFQ"
@@ -85,6 +93,7 @@ class LiquoriceQuoter:
                             rfq.rfqId,
                             rfq.quoteToken,
                         )
+                        metrics.rfqs_total.labels(**metrics_labels, status="LOW_QT_BALANCE").inc()
                         continue
                     quote_lvl = QuoteLevelLite(
                         baseToken=base_token.address,
@@ -107,6 +116,10 @@ class LiquoriceQuoter:
                         continue
                     log.info("Sending quote for RFQ %s: %s", rfq.rfqId, signed_quote)
                     await self.out_quotes.put(signed_quote)
+                    metrics.rfqs_total.labels(**metrics_labels, status="QUOTE_SENT").inc()
 
                 except Exception as e:  # pylint: disable=broad-exception-caught
                     log.error("Failed to process RFQ: %s", e)
+                    metrics.rfqs_total.labels(
+                        **metrics_labels, status="QUOTER_UNHANDLED_EXC"
+                    ).inc()

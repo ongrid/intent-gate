@@ -17,6 +17,7 @@ from app.evm.service import ChainServiceMgr
 from app.health.router import health_router
 from app.log.log import get_uvicorn_log_config, setup_logging
 from app.markets.markets import MarketState
+from app.metrics.metrics import metrics_router
 from app.protocols.liquorice.client import LiquoriceClient
 from app.protocols.liquorice.signer import Web3Signer
 from app.quoter.quoter import LiquoriceQuoter
@@ -76,6 +77,7 @@ app = FastAPI(
 )
 
 app.include_router(health_router)
+app.include_router(metrics_router)
 
 if __name__ == "__main__":
     uvicorn.run(
