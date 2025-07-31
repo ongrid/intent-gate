@@ -6,10 +6,9 @@ from urllib.parse import urlparse
 
 import requests
 
-from app.health.schemas import HealthResponse, HealthStatus
-
 DEFAULT_URL = "http://localhost:8080/health"
 HTTP_CODE_OK = 200
+HTTP_CODE_DEGRADED = 503
 HTTP_TIMEOUT = 10
 
 
@@ -33,17 +32,18 @@ def health_check(url: str) -> tuple[int, str]:
 
         http_resp = requests.get(url, timeout=HTTP_TIMEOUT)
         data = http_resp.json()
-        health_resp = HealthResponse.model_validate(data)
-        if http_resp.status_code == HTTP_CODE_OK and health_resp.status == HealthStatus.HEALTHY:
+        if http_resp.status_code == HTTP_CODE_OK and all(
+            status is True for status in data.values()
+        ):
             return 0, "OK"
 
         # Unix exit codes are limited to 1B (0-255), so we use modulo 256
         ret_code = http_resp.status_code % 256
 
-        if health_resp.status == HealthStatus.DEGRADED:
-            return ret_code, f"ERR_DEGRADED_{http_resp.status_code}"
+        degraded_services = [svc for svc, status in data.items() if status is not True]
+        degraded_list = "_".join(degraded_services).upper()
 
-        return ret_code, f"ERR_OTHER_{http_resp.status_code}"
+        return ret_code, f"ERR_DEGRADED_{http_resp.status_code}_{degraded_list}"
 
     except requests.exceptions.Timeout:
         return 3, "ERR_TIMEOUT"
