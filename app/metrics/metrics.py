@@ -5,9 +5,6 @@ from prometheus_client import CONTENT_TYPE_LATEST, Counter, Gauge, generate_late
 class Metrics:  # pylint: disable=too-few-public-methods
     """Prometheus metrics singleton for quoter service"""
 
-    # TODO: Add health monitoring getter function  # pylint: disable=fixme
-    # See #30 https://github.com/ongrid/open-intent-gate/issues/30
-
     def __init__(self) -> None:
         self.rfqs_total = Counter(
             "rfqs_total",
