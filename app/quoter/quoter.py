@@ -52,14 +52,14 @@ class LiquoriceQuoter:
         """Process RFQs from queue until cancelled."""
         with suppress(asyncio.CancelledError):
             async for rfq in self.rfq_stream():
+                metrics_labels = {
+                    "chain_id": rfq.chainId,
+                    "solver": rfq.solver,
+                    "base_token": rfq.baseToken,
+                    "quote_token": rfq.quoteToken,
+                }
                 try:
                     log.debug("Processing RFQ: %s", rfq)
-                    metrics_labels = {
-                        "chain_id": rfq.chainId,
-                        "solver": rfq.solver,
-                        "base_token": rfq.baseToken,
-                        "quote_token": rfq.quoteToken,
-                    }
                     base_token = self.markets.get_token(rfq.baseToken, rfq.chainId)
                     if not base_token:
                         log.info(
