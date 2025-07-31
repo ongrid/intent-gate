@@ -9,4 +9,4 @@ RUN poetry install --without=dev
 EXPOSE 8080
 HEALTHCHECK --interval=1m --timeout=10s \
   CMD poetry run python3 -m app.metrics.healthcheck_client http://localhost:8080/health
-CMD poetry run python /app/app/main.py
+CMD poetry run python3 /app/app/main.py
