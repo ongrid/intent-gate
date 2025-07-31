@@ -18,8 +18,6 @@ def health_check(url: str) -> tuple[int, str]:
 
     Args:
         url: URL to check
-        expected_status: Expected HTTP status code (default: 200)
-        timeout: Request timeout in seconds (default: 10)
 
     Returns:
         tuple: (exit_code, message) where exit_code is 0 for success, > 0 for failure
