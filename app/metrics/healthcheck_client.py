@@ -30,9 +30,7 @@ def health_check(url: str) -> tuple[int, str]:
 
         http_resp = requests.get(url, timeout=HTTP_TIMEOUT)
         data = http_resp.json()
-        if http_resp.status_code == HTTP_CODE_OK and all(
-            status is True for status in data.values()
-        ):
+        if http_resp.status_code == HTTP_CODE_OK and all(data.values()):
             return 0, "OK"
 
         # Unix exit codes are limited to 1B (0-255), so we use modulo 256
