@@ -2,7 +2,7 @@ services:
 
   intent-gate:
     build: .
-    image: intent-gate:v0.1.0-preview
+    image: intent-gate:v0.1.0-preview.1
     restart: unless-stopped
     ports:
       - '8080:8080'
