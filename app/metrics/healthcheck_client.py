@@ -2,6 +2,7 @@
 """Health check script that makes HTTP request and validates response."""
 import argparse
 import sys
+from typing import Tuple
 from urllib.parse import urlparse
 
 import requests
@@ -12,7 +13,7 @@ HTTP_CODE_DEGRADED = 503
 HTTP_TIMEOUT = 10
 
 
-def health_check(url: str) -> tuple[int, str]:
+def health_check(url: str) -> Tuple[int, str]:
     """
     Make HTTP request and validate response.
 

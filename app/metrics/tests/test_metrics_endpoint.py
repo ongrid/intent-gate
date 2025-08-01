@@ -1,4 +1,4 @@
-"""Tests for health endpoints."""
+"""Tests for metrics endpoints."""
 
 import pytest
 from fastapi import FastAPI
