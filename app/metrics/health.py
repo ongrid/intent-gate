@@ -15,6 +15,15 @@ class CounterHealthChecker:  # pylint: disable=too-few-public-methods
     def __init__(
         self, counter: Counter, interval: int, label_values: List[str], label_key: str = "status"
     ) -> None:
+        """
+        Initialize the health checker.
+
+        Args:
+            counter: Prometheus Counter instance to monitor.
+            interval: Time interval in seconds to check for updates.
+            label_key: The key in the labels to check against the label_values.
+            label_values: List of label values to consider for health check (positive if present).
+        """
         self.counter: Counter = counter
         self.interval: int = interval
         self.label_key: str = label_key

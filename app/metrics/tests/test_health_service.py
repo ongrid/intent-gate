@@ -56,7 +56,7 @@ def test_health_endpoint_healthy_status(fastapi_client_factory, healthy_service)
 
 
 def test_health_endpoint_degraded_status(fastapi_client_factory, degraded_service):
-    """Test health endpoint returns 200 when service is healthy."""
+    """Test health endpoint returns 503 when service is degraded."""
     client = fastapi_client_factory(degraded_service)
     response = client.get("/health")
     assert response.json() == {"svc_1": True, "svc_2": False}
