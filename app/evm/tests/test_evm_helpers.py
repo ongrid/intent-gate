@@ -1,7 +1,10 @@
+from uuid import UUID
+
 import pytest
 from eth_typing import ChecksumAddress, HexStr
+from hexbytes import HexBytes
 
-from app.evm.helpers import encode_address
+from app.evm.helpers import encode_address, uuid_to_topic
 
 
 @pytest.mark.parametrize(
@@ -39,3 +42,16 @@ def test_pad_address_invalid_input() -> None:
 
     with pytest.raises(ValueError):
         encode_address("0xC02aaa39b223FE8D0A0e5C4F27eAD9083C756Cc2")  # Broken checksum
+
+
+def test_uuid_to_topic():
+    """Rust test vector from Liquorice team
+    let rfq_id = Uuid::from_str("c61c7b1d-86fa-402e-ba12-fb49c9c55cf8").unwrap();
+    let event_rfq_id = keccak256(rfq_id.to_string().as_bytes());
+    println!("{}", event_rfq_id); // 0x5205ecfc2e68786dcf34fffa27fb32e55f3c1c740959eb95c8b37ad61504a5c8
+    """
+    rfq_id = UUID("c61c7b1d-86fa-402e-ba12-fb49c9c55cf8")
+    event_rfq_id = uuid_to_topic(rfq_id)
+    assert event_rfq_id == HexBytes(
+        "0x5205ecfc2e68786dcf34fffa27fb32e55f3c1c740959eb95c8b37ad61504a5c8"
+    )
